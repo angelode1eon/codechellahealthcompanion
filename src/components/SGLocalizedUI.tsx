@@ -6,7 +6,7 @@ interface SGMessageProps {
   message: string
 }
 
-export const SGMessage = ({ type, message }: SGMessageProps) => {
+export const SGMessage: React.FC<SGMessageProps> = ({ type, message }) => {
   const configs = {
     success: {
       bg: 'bg-green-100',
@@ -39,7 +39,11 @@ export const SGMessage = ({ type, message }: SGMessageProps) => {
   )
 }
 
-export const SGLoadingSpinner = ({ message = 'Loading liao...' }: { message?: string }) => {
+interface SGLoadingSpinnerProps {
+  message?: string
+}
+
+export const SGLoadingSpinner: React.FC<SGLoadingSpinnerProps> = ({ message = 'Loading liao...' }) => {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <div className="relative w-20 h-20 mb-4">
@@ -51,15 +55,13 @@ export const SGLoadingSpinner = ({ message = 'Loading liao...' }: { message?: st
   )
 }
 
-export const SGEmptyState = ({ 
-  emoji, 
-  title, 
-  description 
-}: { 
+interface SGEmptyStateProps {
   emoji: string
   title: string
-  description: string 
-}) => {
+  description: string
+}
+
+export const SGEmptyState: React.FC<SGEmptyStateProps> = ({ emoji, title, description }) => {
   return (
     <div className="text-center py-12">
       <div className="text-8xl mb-4">{emoji}</div>
@@ -69,7 +71,6 @@ export const SGEmptyState = ({
   )
 }
 
-// Singlish copywriting constants
 export const SGCopywriting = {
   welcome: {
     title: 'Eh welcome lah! 👋',

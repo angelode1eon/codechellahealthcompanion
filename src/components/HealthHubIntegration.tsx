@@ -2,13 +2,12 @@ import React, { useState } from 'react'
 import { Shield, Search, CheckCircle, AlertCircle } from 'lucide-react'
 import { SGMessage, SGLoadingSpinner } from './SGLocalizedUI'
 
-const HealthHubIntegration = () => {
-  const [isConnected, setIsConnected] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+const HealthHubIntegration: React.FC = () => {
+  const [isConnected, setIsConnected] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  const handleConnect = async () => {
+  const handleConnect = async (): Promise<void> => {
     setIsLoading(true)
-    // Simulate API connection
     setTimeout(() => {
       setIsConnected(true)
       setIsLoading(false)
@@ -17,7 +16,6 @@ const HealthHubIntegration = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-gradient-to-br from-memphis-cyan via-memphis-green to-memphis-yellow rounded-3xl p-8 shadow-2xl text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mt-20 opacity-20"></div>
         
@@ -30,7 +28,6 @@ const HealthHubIntegration = () => {
         </div>
       </div>
 
-      {/* Connection Status */}
       {!isConnected ? (
         <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-purple">
           <h3 className="text-3xl font-bold text-memphis-purple mb-6">Connect to HealthHub</h3>
@@ -125,7 +122,6 @@ const HealthHubIntegration = () => {
         </div>
       )}
 
-      {/* Features Preview */}
       <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-yellow">
         <h3 className="text-3xl font-bold text-memphis-purple mb-6">What You Get 🎁</h3>
         
