@@ -3,8 +3,8 @@ import { Search, TrendingDown, Flame, Droplet, MapPin, ChevronRight } from 'luci
 import { hawkerHealthTips, searchHawkerTips, getHawkerTipsByCategory } from '../utils/hawkerHealthTips'
 import { HawkerTip } from '../types/healthhub'
 
-const HawkerHealthTips: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState<string>('')
+const HawkerHealthTips = () => {
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedTip, setSelectedTip] = useState<HawkerTip | null>(null)
 
@@ -23,7 +23,7 @@ const HawkerHealthTips: React.FC = () => {
     ? hawkerHealthTips
     : getHawkerTipsByCategory(selectedCategory)
 
-  const getDifficultyColor = (difficulty: string): string => {
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy': return 'bg-memphis-green'
       case 'medium': return 'bg-memphis-yellow'
@@ -34,6 +34,7 @@ const HawkerHealthTips: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="bg-gradient-to-br from-memphis-coral via-memphis-yellow to-memphis-green rounded-3xl p-8 shadow-2xl text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mt-20 opacity-20"></div>
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full -ml-16 -mb-16 opacity-20"></div>
@@ -45,6 +46,7 @@ const HawkerHealthTips: React.FC = () => {
         </div>
       </div>
 
+      {/* Search Bar */}
       <div className="bg-white rounded-2xl p-4 shadow-lg border-4 border-memphis-purple">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-memphis-purple w-6 h-6" />
@@ -58,6 +60,7 @@ const HawkerHealthTips: React.FC = () => {
         </div>
       </div>
 
+      {/* Category Filter */}
       <div className="flex gap-3 overflow-x-auto pb-2">
         {categories.map(cat => (
           <button
@@ -78,6 +81,7 @@ const HawkerHealthTips: React.FC = () => {
         ))}
       </div>
 
+      {/* Tips Grid */}
       {filteredTips.length === 0 ? (
         <div className="bg-white rounded-3xl p-12 shadow-2xl border-8 border-memphis-lavender text-center">
           <div className="text-8xl mb-6">🔍</div>
@@ -134,6 +138,7 @@ const HawkerHealthTips: React.FC = () => {
         </div>
       )}
 
+      {/* Detail Modal */}
       {selectedTip && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-8 border-memphis-purple">
@@ -154,6 +159,7 @@ const HawkerHealthTips: React.FC = () => {
             <div className="p-8">
               <h2 className="text-4xl font-bold text-memphis-purple mb-4">{selectedTip.dishName}</h2>
 
+              {/* Popular Locations */}
               <div className="bg-memphis-pink rounded-2xl p-4 mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="w-5 h-5 text-memphis-purple" />
@@ -168,6 +174,7 @@ const HawkerHealthTips: React.FC = () => {
                 </div>
               </div>
 
+              {/* Comparison */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-red-100 rounded-2xl p-5 border-4 border-red-300">
                   <h3 className="text-xl font-bold text-red-700 mb-3">❌ Regular Version</h3>
@@ -200,6 +207,7 @@ const HawkerHealthTips: React.FC = () => {
                 </div>
               </div>
 
+              {/* Savings */}
               <div className="bg-gradient-to-r from-memphis-green to-memphis-cyan rounded-2xl p-6 mb-6 text-white">
                 <h3 className="text-2xl font-bold mb-3">💰 What You Save</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -214,6 +222,7 @@ const HawkerHealthTips: React.FC = () => {
                 </div>
               </div>
 
+              {/* Tips */}
               <div className="bg-memphis-yellow rounded-2xl p-6">
                 <h3 className="text-2xl font-bold text-memphis-purple mb-4">💡 How to Order (Singlish Style!)</h3>
                 <ul className="space-y-3">

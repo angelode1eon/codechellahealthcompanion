@@ -8,41 +8,46 @@ import FoodLog from './components/FoodLog'
 import RewardsPage from './components/RewardsPage'
 import MonthlyWrappedPage from './components/MonthlyWrappedPage'
 import HawkerHealthTips from './components/HawkerHealthTips'
-import HealthHubIntegration from './components/HealthHubIntegration'
 import LoginPage from './components/LoginPage'
+import HealthSummaryCard from './components/HealthSummaryCard'
 import PersonalizedDashboard from './components/PersonalizedDashboard'
 import { SGCopywriting } from './components/SGLocalizedUI'
 import { useDailyIntake } from './hooks/useDailyIntake'
 import { useMealHistory } from './hooks/useMealHistory'
 import { useRewardsPoints } from './hooks/useRewardsPoints'
-import { isAuthenticated, getCurrentUser, logout } from './utils/authService'
-import { UserProfile } from './types/user'
+import { healthhubAuth } from './services/healthhubAuth'
+import { generateHealthSummary } from './services/healthSummaryService'
+import { UserHealthProfile, HealthSummary } from './types/healthhub'
 import { LogOut, User } from 'lucide-react'
 
 function App() {
   const [activeTab, setActiveTab] = useState('home')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserHealthProfile | null>(null)
+  const [healthSummary, setHealthSummary] = useState<HealthSummary | null>(null)
   const { dailyIntake, addMeal } = useDailyIntake()
   const { addMealToHistory } = useMealHistory()
   const { addMealPoints, updateStreak } = useRewardsPoints()
 
+  // Check authentication on mount
   useEffect(() => {
-    if (isAuthenticated()) {
-      setIsLoggedIn(true)
-      setCurrentUser(getCurrentUser())
+    if (healthhubAuth.isAuthenticated()) {
+      const user = healthhubAuth.getCurrentUser()
+      if (user) {
+        setCurrentUser(user)
+        setHealthSummary(generateHealthSummary(user))
+      }
     }
   }, [])
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true)
-    setCurrentUser(getCurrentUser())
+  const handleLoginSuccess = (user: UserHealthProfile) => {
+    setCurrentUser(user)
+    setHealthSummary(generateHealthSummary(user))
   }
 
   const handleLogout = () => {
-    logout()
-    setIsLoggedIn(false)
+    healthhubAuth.logout()
     setCurrentUser(null)
+    setHealthSummary(null)
     setActiveTab('home')
   }
 
@@ -56,7 +61,8 @@ function App() {
     console.log(`${SGCopywriting.rewards.earnedPoints.replace('{points}', points.toString())}`)
   }
 
-  if (!isLoggedIn) {
+  // Show login page if not authenticated
+  if (!currentUser || !healthSummary) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />
   }
 
@@ -67,39 +73,35 @@ function App() {
       <div className="relative z-10">
         <Header />
         
-        {currentUser && (
-          <div className="container mx-auto px-4 pt-4">
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl p-4 shadow-lg border-4 border-memphis-purple flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-memphis-purple text-white w-12 h-12 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg text-memphis-purple">{currentUser.name}</div>
-                    <div className="text-sm text-gray-600">{currentUser.email}</div>
-                  </div>
+        {/* User Info Bar */}
+        <div className="bg-white border-b-8 border-memphis-purple shadow-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between max-w-2xl mx-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-memphis-cyan rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="bg-memphis-coral hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
+                <div>
+                  <p className="text-xl font-bold text-memphis-purple">{currentUser.name}</p>
+                  <p className="text-sm text-gray-600">{currentUser.email}</p>
+                </div>
               </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </button>
             </div>
           </div>
-        )}
+        </div>
         
         <main className="container mx-auto px-4 py-8 pb-32">
           <div className="max-w-2xl mx-auto">
-            {activeTab === 'home' && currentUser && (
+            {activeTab === 'home' && (
               <div className="space-y-8">
-                <PersonalizedDashboard 
-                  user={currentUser} 
-                  currentIntake={dailyIntake}
-                />
+                <PersonalizedDashboard summary={healthSummary} dailyIntake={dailyIntake} />
 
                 <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-purple relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-memphis-yellow rounded-full -mr-16 -mt-16 opacity-50"></div>
@@ -123,7 +125,7 @@ function App() {
             {activeTab === 'tips' && <HawkerHealthTips />}
             {activeTab === 'wrapped' && <MonthlyWrappedPage />}
             {activeTab === 'rewards' && <RewardsPage />}
-            {activeTab === 'healthhub' && <HealthHubIntegration />}
+            {activeTab === 'profile' && <HealthSummaryCard summary={healthSummary} />}
           </div>
         </main>
 

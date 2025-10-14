@@ -1,39 +1,45 @@
 import React from 'react'
-import { Home, BookOpen, TrendingUp, Trophy, Utensils, Shield } from 'lucide-react'
+import { Home, BookOpen, TrendingUp, Award, Calendar, User } from 'lucide-react'
 
 interface NavigationProps {
   activeTab: string
   onTabChange: (tab: string) => void
 }
 
-const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
+const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'log', icon: BookOpen, label: 'My Makan' },
-    { id: 'tips', icon: Utensils, label: 'Hawker Tips' },
-    { id: 'wrapped', icon: TrendingUp, label: 'Progress' },
-    { id: 'rewards', icon: Trophy, label: 'Rewards' },
-    { id: 'healthhub', icon: Shield, label: 'HealthHub' }
+    { id: 'home', icon: Home, label: 'Home', emoji: '🏠' },
+    { id: 'log', icon: BookOpen, label: 'Log', emoji: '📖' },
+    { id: 'tips', icon: TrendingUp, label: 'Tips', emoji: '💡' },
+    { id: 'rewards', icon: Award, label: 'Rewards', emoji: '🏆' },
+    { id: 'wrapped', icon: Calendar, label: 'Wrapped', emoji: '📊' },
+    { id: 'profile', icon: User, label: 'Profile', emoji: '👤' }
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-8 border-memphis-purple shadow-2xl z-50 overflow-x-auto">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t-8 border-memphis-purple shadow-2xl z-50">
       <div className="container mx-auto px-2">
-        <div className="flex justify-around items-center py-3 min-w-max">
-          {tabs.map(({ id, icon: Icon, label }) => (
-            <button
-              key={id}
-              onClick={() => onTabChange(id)}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all transform hover:scale-110 ${
-                activeTab === id
-                  ? 'bg-memphis-purple text-white shadow-lg scale-110'
-                  : 'text-memphis-purple hover:bg-memphis-pink'
-              }`}
-            >
-              <Icon className="w-6 h-6" strokeWidth={2.5} />
-              <span className="text-xs font-bold whitespace-nowrap">{label}</span>
-            </button>
-          ))}
+        <div className="flex justify-around items-center py-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all transform ${
+                  isActive
+                    ? 'bg-memphis-purple text-white scale-110 shadow-lg'
+                    : 'text-gray-600 hover:bg-memphis-pink hover:scale-105'
+                }`}
+              >
+                <Icon className={`w-6 h-6 ${isActive ? 'animate-bounce' : ''}`} />
+                <span className="text-xs font-bold">{tab.label}</span>
+                {isActive && <span className="text-lg">{tab.emoji}</span>}
+              </button>
+            )
+          })}
         </div>
       </div>
     </nav>

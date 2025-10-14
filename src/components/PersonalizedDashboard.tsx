@@ -1,201 +1,221 @@
 import React from 'react'
-import { Target, TrendingUp, AlertCircle, CheckCircle, Info } from 'lucide-react'
-import { UserProfile, DailyNutrientTargets, HealthSummary } from '../types/user'
-import { calculateDailyTargets, generateHealthSummary } from '../utils/hpbGuidelines'
+import { Target, TrendingUp, AlertCircle } from 'lucide-react'
+import { HealthSummary, DailyIntake } from '../types/healthhub'
 
 interface PersonalizedDashboardProps {
-  user: UserProfile
-  currentIntake: {
-    calories: number
-    protein: number
-    carbohydrates: number
-    fat: number
-    sodium: number
-    sugar: number
-    fiber: number
-  }
+  summary: HealthSummary
+  dailyIntake: DailyIntake
 }
 
-const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ user, currentIntake }) => {
-  const targets = calculateDailyTargets(user)
-  const healthSummary = generateHealthSummary(user, targets)
-
-  const calculateProgress = (current: number, target: number): number => {
-    return Math.min(100, Math.round((current / target) * 100))
-  }
-
-  const getProgressColor = (progress: number, isLowerBetter: boolean = false): string => {
-    if (isLowerBetter) {
-      if (progress <= 70) return 'bg-memphis-green'
-      if (progress <= 90) return 'bg-memphis-yellow'
-      return 'bg-memphis-coral'
-    }
-    if (progress >= 90) return 'bg-memphis-green'
-    if (progress >= 70) return 'bg-memphis-yellow'
-    return 'bg-memphis-coral'
-  }
-
-  const getSeverityColor = (severity: string): string => {
-    switch (severity) {
-      case 'critical': return 'border-red-500 bg-red-50'
-      case 'warning': return 'border-yellow-500 bg-yellow-50'
-      default: return 'border-blue-500 bg-blue-50'
-    }
-  }
+const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, dailyIntake }) => {
+  const { targets } = summary
 
   const nutrients = [
-    { name: 'Calories', current: currentIntake.calories, target: targets.calories, unit: 'kcal', icon: '🔥' },
-    { name: 'Protein', current: currentIntake.protein, target: targets.protein, unit: 'g', icon: '🥩' },
-    { name: 'Carbs', current: currentIntake.carbohydrates, target: targets.carbohydrates, unit: 'g', icon: '🍚' },
-    { name: 'Fat', current: currentIntake.fat, target: targets.fat, unit: 'g', icon: '🥑' },
-    { name: 'Sodium', current: currentIntake.sodium, target: targets.sodium, unit: 'mg', icon: '🧂', isLowerBetter: true },
-    { name: 'Sugar', current: currentIntake.sugar, target: targets.sugar, unit: 'g', icon: '🍬', isLowerBetter: true }
+    {
+      name: 'Calories',
+      current: dailyIntake.totalCalories,
+      target: targets.calories.recommended,
+      min: targets.calories.min,
+      max: targets.calories.max,
+      unit: 'kcal',
+      color: '#FF6F61',
+      icon: '🔥'
+    },
+    {
+      name: 'Protein',
+      current: dailyIntake.totalProtein,
+      target: targets.protein.recommended,
+      min: targets.protein.min,
+      max: targets.protein.max,
+      unit: 'g',
+      color: '#6B5B95',
+      icon: '🥩'
+    },
+    {
+      name: 'Carbs',
+      current: dailyIntake.totalCarbs,
+      target: targets.carbs.recommended,
+      min: targets.carbs.min,
+      max: targets.carbs.max,
+      unit: 'g',
+      color: '#88B04B',
+      icon: '🍚'
+    },
+    {
+      name: 'Fat',
+      current: dailyIntake.totalFat,
+      target: targets.fat.recommended,
+      min: targets.fat.min,
+      max: targets.fat.max,
+      unit: 'g',
+      color: '#FFA07A',
+      icon: '🥑'
+    },
+    {
+      name: 'Sodium',
+      current: dailyIntake.totalSodium,
+      target: targets.sodium.recommended,
+      min: targets.sodium.min,
+      max: targets.sodium.max,
+      unit: 'mg',
+      color: '#20B2AA',
+      icon: '🧂'
+    },
+    {
+      name: 'Sugar',
+      current: dailyIntake.totalSugar,
+      target: targets.sugar.recommended,
+      min: targets.sugar.min,
+      max: targets.sugar.max,
+      unit: 'g',
+      color: '#F7CAC9',
+      icon: '🍬'
+    },
+    {
+      name: 'Fiber',
+      current: dailyIntake.totalFiber,
+      target: targets.fiber.recommended,
+      min: targets.fiber.min,
+      max: targets.fiber.recommended,
+      unit: 'g',
+      color: '#88B04B',
+      icon: '🥦'
+    }
   ]
+
+  const getProgressPercentage = (current: number, target: number) => {
+    return Math.min((current / target) * 100, 100)
+  }
+
+  const getStatus = (current: number, min: number, max: number, target: number) => {
+    if (current < min) return { text: 'Too Low', color: 'text-yellow-600', bg: 'bg-yellow-100' }
+    if (current > max) return { text: 'Too High', color: 'text-red-600', bg: 'bg-red-100' }
+    if (Math.abs(current - target) / target < 0.1) return { text: 'Perfect!', color: 'text-green-600', bg: 'bg-green-100' }
+    return { text: 'Good', color: 'text-blue-600', bg: 'bg-blue-100' }
+  }
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-memphis-purple via-memphis-coral to-memphis-yellow rounded-3xl p-8 shadow-2xl text-white relative overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-memphis-cyan via-memphis-purple to-memphis-pink rounded-3xl p-8 shadow-2xl text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mt-20 opacity-20"></div>
         
         <div className="relative z-10">
-          <h2 className="text-4xl font-bold mb-2">Welcome back, {user.name}! 👋</h2>
-          <p className="text-xl opacity-90">Your personalized health dashboard</p>
-          
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <div className="bg-white bg-opacity-20 rounded-2xl p-4 text-center">
-              <div className="text-3xl font-bold">{user.age}</div>
-              <div className="text-sm opacity-90">years old</div>
-            </div>
-            <div className="bg-white bg-opacity-20 rounded-2xl p-4 text-center">
-              <div className="text-3xl font-bold">{user.weight}kg</div>
-              <div className="text-sm opacity-90">weight</div>
-            </div>
-            <div className="bg-white bg-opacity-20 rounded-2xl p-4 text-center">
-              <div className="text-3xl font-bold">{healthSummary.overallScore}</div>
-              <div className="text-sm opacity-90">health score</div>
-            </div>
+          <div className="flex items-center gap-3 mb-4">
+            <Target className="w-12 h-12" />
+            <h2 className="text-5xl font-bold">Your Daily Targets</h2>
           </div>
+          <p className="text-2xl opacity-90">Personalized for your health goals 🎯</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-green">
-        <div className="flex items-center gap-3 mb-6">
-          <AlertCircle className="w-8 h-8 text-memphis-purple" />
-          <h3 className="text-3xl font-bold text-memphis-purple">Your Health Summary</h3>
-        </div>
+      {/* Nutrient Cards */}
+      <div className="grid gap-6">
+        {nutrients.map((nutrient) => {
+          const progress = getProgressPercentage(nutrient.current, nutrient.target)
+          const status = getStatus(nutrient.current, nutrient.min, nutrient.max, nutrient.target)
 
-        {healthSummary.warnings.length > 0 && (
-          <div className="mb-6 space-y-3">
-            {healthSummary.warnings.map((warning, idx) => (
-              <div key={idx} className="bg-red-100 border-4 border-red-400 rounded-2xl p-4">
-                <p className="text-red-800 font-bold">{warning}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {healthSummary.conditionNotes.map((note, idx) => (
-            <div
-              key={idx}
-              className={`rounded-2xl p-5 border-4 ${getSeverityColor(note.severity)}`}
+          return (
+            <div 
+              key={nutrient.name}
+              className="bg-white rounded-3xl p-6 shadow-2xl border-8"
+              style={{ borderColor: nutrient.color }}
             >
-              <div className="flex items-start gap-3">
-                <span className="text-3xl">{note.icon}</span>
-                <div className="flex-1">
-                  <h4 className="text-xl font-bold text-gray-800 mb-2">{note.condition}</h4>
-                  <p className="text-gray-700">{note.message}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {user.dietaryRestrictions.length > 0 && (
-          <div className="mt-6 bg-memphis-pink rounded-2xl p-5">
-            <h4 className="text-xl font-bold text-memphis-purple mb-3">Dietary Restrictions</h4>
-            <div className="flex flex-wrap gap-2">
-              {user.dietaryRestrictions.map((restriction) => (
-                <span
-                  key={restriction.id}
-                  className="bg-white text-memphis-purple px-4 py-2 rounded-xl font-bold border-2 border-memphis-purple"
-                >
-                  {restriction.type.replace('-', ' ').toUpperCase()}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-cyan">
-        <div className="flex items-center gap-3 mb-6">
-          <Target className="w-8 h-8 text-memphis-purple" />
-          <h3 className="text-3xl font-bold text-memphis-purple">Daily Nutrient Targets</h3>
-        </div>
-
-        <p className="text-gray-700 mb-6 text-lg">
-          Based on HPB dietary guidelines for your profile
-        </p>
-
-        <div className="grid gap-4">
-          {nutrients.map((nutrient) => {
-            const progress = calculateProgress(nutrient.current, nutrient.target)
-            const progressColor = getProgressColor(progress, nutrient.isLowerBetter)
-
-            return (
-              <div key={nutrient.name} className="bg-memphis-pink rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{nutrient.icon}</span>
-                    <span className="text-xl font-bold text-memphis-purple">{nutrient.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-memphis-purple">
-                      {nutrient.current} / {nutrient.target}
-                    </div>
-                    <div className="text-sm text-gray-600">{nutrient.unit}</div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-5xl">{nutrient.icon}</div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-memphis-purple">{nutrient.name}</h3>
+                    <p className="text-lg text-gray-600">
+                      Target: {nutrient.target}{nutrient.unit}
+                    </p>
                   </div>
                 </div>
-
-                <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className={`absolute top-0 left-0 h-full ${progressColor} transition-all duration-500 rounded-full`}
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-
-                <div className="mt-2 text-right text-sm font-bold text-gray-600">
-                  {progress}% of target
+                <div className={`px-4 py-2 rounded-full ${status.bg}`}>
+                  <span className={`text-lg font-bold ${status.color}`}>{status.text}</span>
                 </div>
               </div>
-            )
-          })}
-        </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                  <span>Min: {nutrient.min}{nutrient.unit}</span>
+                  <span className="font-bold text-memphis-purple">
+                    {nutrient.current}{nutrient.unit}
+                  </span>
+                  <span>Max: {nutrient.max}{nutrient.unit}</span>
+                </div>
+                <div className="h-6 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ 
+                      width: `${progress}%`,
+                      backgroundColor: nutrient.color
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Range Indicator */}
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex-1 h-2 bg-yellow-200 rounded-l-full" />
+                <div className="flex-1 h-2 bg-green-200" />
+                <div className="flex-1 h-2 bg-red-200 rounded-r-full" />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Below</span>
+                <span>Optimal</span>
+                <span>Above</span>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
+      {/* Tips Card */}
       <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-yellow">
         <div className="flex items-center gap-3 mb-6">
-          <TrendingUp className="w-8 h-8 text-memphis-purple" />
-          <h3 className="text-3xl font-bold text-memphis-purple">Personalized Tips</h3>
+          <TrendingUp className="w-10 h-10 text-memphis-purple" />
+          <h3 className="text-3xl font-bold text-memphis-purple">Today's Tips 💡</h3>
         </div>
-
-        <div className="space-y-3">
-          {healthSummary.recommendations.map((tip, idx) => (
-            <div key={idx} className="flex items-start gap-3 bg-memphis-pink rounded-2xl p-4">
-              <CheckCircle className="w-6 h-6 text-memphis-green flex-shrink-0 mt-1" />
-              <p className="text-gray-800 text-lg">{tip}</p>
+        
+        <div className="space-y-4">
+          {dailyIntake.totalCalories < targets.calories.min && (
+            <div className="bg-yellow-100 border-4 border-yellow-400 rounded-2xl p-5 flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+              <p className="text-lg text-gray-700">
+                You're below your calorie target. Consider adding a healthy snack!
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
 
-      <div className="bg-white rounded-2xl p-6 shadow-lg border-4 border-memphis-purple">
-        <div className="flex items-start gap-3">
-          <Info className="w-5 h-5 text-memphis-purple flex-shrink-0 mt-1" />
-          <div className="text-sm text-gray-700">
-            <strong>Note:</strong> These targets are based on HPB (Health Promotion Board) dietary guidelines and your personal health profile. Always consult your healthcare provider before making significant dietary changes.
-          </div>
+          {dailyIntake.totalSodium > targets.sodium.max && (
+            <div className="bg-red-100 border-4 border-red-400 rounded-2xl p-5 flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <p className="text-lg text-gray-700">
+                Sodium intake is high. Choose fresh foods over processed ones for your next meal.
+              </p>
+            </div>
+          )}
+
+          {dailyIntake.totalFiber < targets.fiber.recommended && (
+            <div className="bg-blue-100 border-4 border-blue-400 rounded-2xl p-5 flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+              <p className="text-lg text-gray-700">
+                Boost your fiber! Add more vegetables, fruits, or whole grains.
+              </p>
+            </div>
+          )}
+
+          {dailyIntake.totalProtein >= targets.protein.recommended && 
+           dailyIntake.totalFiber >= targets.fiber.recommended && (
+            <div className="bg-green-100 border-4 border-green-400 rounded-2xl p-5 flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+              <p className="text-lg text-gray-700">
+                Shiok! You're hitting your protein and fiber targets! Keep it up! 💪
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

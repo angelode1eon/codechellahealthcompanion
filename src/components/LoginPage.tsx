@@ -1,94 +1,108 @@
 import React, { useState } from 'react'
-import { Shield, Mail, Lock, AlertCircle, Info } from 'lucide-react'
-import { loginWithHealthHub, getDemoAccounts } from '../utils/authService'
-import { SGMessage, SGLoadingSpinner } from './SGLocalizedUI'
+import { LogIn, Shield, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { healthhubAuth } from '../services/healthhubAuth'
+import { UserHealthProfile } from '../types/healthhub'
+import { SGLoadingSpinner } from './SGLocalizedUI'
 
 interface LoginPageProps {
-  onLoginSuccess: () => void
+  onLoginSuccess: (user: UserHealthProfile) => void
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string>('')
-  const [showDemoAccounts, setShowDemoAccounts] = useState<boolean>(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleLogin = async (e: React.FormEvent): Promise<void> => {
+  const demoCredentials = healthhubAuth.getDemoCredentials()
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
 
-    const result = await loginWithHealthHub(email, password)
-
-    setIsLoading(false)
-
-    if (result.success) {
-      onLoginSuccess()
-    } else {
-      setError(result.error || 'Login failed. Please try again.')
+    try {
+      const response = await healthhubAuth.login({ email, password })
+      
+      if (response.success && response.user) {
+        onLoginSuccess(response.user)
+      } else {
+        setError(response.error || 'Login failed. Please try again.')
+      }
+    } catch (err) {
+      setError('Network error. Please check your connection.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const demoAccounts = getDemoAccounts()
+  const handleDemoLogin = () => {
+    setEmail(demoCredentials.email)
+    setPassword(demoCredentials.password)
+  }
 
   return (
-    <div className="min-h-screen bg-memphis-pink flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-6">
-        <div className="bg-gradient-to-br from-memphis-purple via-memphis-coral to-memphis-yellow rounded-3xl p-8 shadow-2xl text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -mr-16 -mt-16 opacity-20"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full -ml-12 -mb-12 opacity-20"></div>
-          
-          <div className="relative z-10 text-center">
-            <Shield className="w-20 h-20 mx-auto mb-4" />
-            <h1 className="text-5xl font-bold mb-3">Welcome Back! 👋</h1>
-            <p className="text-xl opacity-90">Login to track your health journey</p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-memphis-cyan via-memphis-green to-memphis-yellow flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="text-8xl mb-4">🏥</div>
+          <h1 className="text-6xl font-bold text-white mb-2">Health Companion</h1>
+          <p className="text-2xl text-white opacity-90">Powered by HealthHub 🇸🇬</p>
         </div>
 
+        {/* Login Card */}
         <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-purple">
-          <h2 className="text-3xl font-bold text-memphis-purple mb-6 text-center">
-            Login to HealthHub
-          </h2>
+          <div className="flex items-center gap-3 mb-6">
+            <Shield className="w-10 h-10 text-memphis-purple" />
+            <h2 className="text-4xl font-bold text-memphis-purple">Secure Login</h2>
+          </div>
 
           {error && (
-            <div className="mb-6">
-              <SGMessage type="warning" message={error} />
+            <div className="mb-6 bg-red-100 border-4 border-red-400 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+                <p className="text-red-800 font-medium">{error}</p>
+              </div>
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-lg font-bold text-memphis-purple mb-2">
+              <label className="block text-xl font-bold text-memphis-purple mb-2">
                 Email Address
               </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-memphis-purple w-5 h-5" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.sg"
-                  required
-                  className="w-full pl-12 pr-4 py-4 text-lg rounded-2xl border-4 border-memphis-lavender focus:border-memphis-purple focus:outline-none"
-                />
-              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-6 py-4 text-xl border-4 border-memphis-cyan rounded-2xl focus:outline-none focus:border-memphis-purple transition-colors"
+                placeholder="your.email@healthhub.sg"
+                required
+              />
             </div>
 
             <div>
-              <label className="block text-lg font-bold text-memphis-purple mb-2">
+              <label className="block text-xl font-bold text-memphis-purple mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-memphis-purple w-5 h-5" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  className="w-full px-6 py-4 text-xl border-4 border-memphis-cyan rounded-2xl focus:outline-none focus:border-memphis-purple transition-colors pr-14"
+                  placeholder="••••••••"
                   required
-                  className="w-full pl-12 pr-4 py-4 text-lg rounded-2xl border-4 border-memphis-lavender focus:border-memphis-purple focus:outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-memphis-purple transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                </button>
               </div>
             </div>
 
@@ -97,67 +111,45 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             ) : (
               <button
                 type="submit"
-                className="w-full bg-memphis-green hover:bg-opacity-90 text-white font-bold py-5 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-4 border-memphis-cyan text-xl"
+                className="w-full bg-memphis-purple hover:bg-opacity-90 text-white font-bold py-5 px-8 rounded-2xl shadow-xl transform hover:scale-105 transition-all border-4 border-memphis-cyan"
               >
-                Login Now! 🚀
+                <div className="flex items-center justify-center gap-3">
+                  <LogIn className="w-6 h-6" />
+                  <span className="text-2xl">Login to HealthHub</span>
+                </div>
               </button>
             )}
           </form>
 
-          <div className="mt-6 text-center">
+          {/* Demo Login */}
+          <div className="mt-6 pt-6 border-t-4 border-memphis-pink">
             <button
-              onClick={() => setShowDemoAccounts(!showDemoAccounts)}
-              className="text-memphis-purple font-bold underline hover:text-memphis-coral transition-colors"
+              onClick={handleDemoLogin}
+              className="w-full bg-memphis-yellow hover:bg-opacity-90 text-memphis-purple font-bold py-4 px-6 rounded-2xl shadow-lg transition-all"
             >
-              {showDemoAccounts ? 'Hide' : 'Show'} Demo Accounts
+              <span className="text-xl">Try Demo Account 🎮</span>
             </button>
+            <p className="text-center text-sm text-gray-600 mt-3">
+              Demo: {demoCredentials.email} / {demoCredentials.password}
+            </p>
+          </div>
+
+          {/* Privacy Notice */}
+          <div className="mt-6 bg-memphis-pink rounded-2xl p-4">
+            <p className="text-sm text-gray-700 text-center">
+              🔒 Your health data is encrypted and secure. We follow HPB privacy guidelines.
+            </p>
           </div>
         </div>
 
-        {showDemoAccounts && (
-          <div className="bg-white rounded-3xl p-6 shadow-2xl border-8 border-memphis-yellow">
-            <div className="flex items-center gap-2 mb-4">
-              <Info className="w-6 h-6 text-memphis-purple" />
-              <h3 className="text-2xl font-bold text-memphis-purple">Demo Accounts</h3>
-            </div>
-            
-            <p className="text-gray-700 mb-4">
-              Try these demo accounts! Password for all: <strong>demo123</strong>
-            </p>
-
-            <div className="space-y-3">
-              {demoAccounts.map((account, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => {
-                    setEmail(account.email)
-                    setPassword('demo123')
-                  }}
-                  className="bg-memphis-pink rounded-2xl p-4 cursor-pointer hover:bg-opacity-70 transition-all border-2 border-memphis-purple"
-                >
-                  <div className="font-bold text-memphis-purple text-lg">{account.name}</div>
-                  <div className="text-sm text-gray-700">{account.email}</div>
-                  <div className="text-xs text-gray-600 mt-2">
-                    <strong>Conditions:</strong> {account.conditions}
-                  </div>
-                  {account.restrictions !== 'None' && (
-                    <div className="text-xs text-gray-600">
-                      <strong>Restrictions:</strong> {account.restrictions}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white rounded-2xl p-4 shadow-lg border-4 border-memphis-cyan">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-memphis-purple flex-shrink-0 mt-1" />
-            <div className="text-sm text-gray-700">
-              <strong>Note:</strong> This is a demo app. In production, this would connect to the official HealthHub API with secure OAuth authentication.
-            </div>
-          </div>
+        {/* Footer */}
+        <div className="text-center mt-6 text-white">
+          <p className="text-lg opacity-90">
+            Don't have an account?{' '}
+            <a href="https://www.healthhub.sg" target="_blank" rel="noopener noreferrer" className="font-bold underline">
+              Sign up at HealthHub
+            </a>
+          </p>
         </div>
       </div>
     </div>
