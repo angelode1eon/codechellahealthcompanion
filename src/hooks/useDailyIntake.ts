@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FoodPrediction, DailyIntake } from '../types/food'
+import { DailyIntake } from '../types/healthhub'
 
 const STORAGE_KEY = 'daily-intake'
 
@@ -19,6 +19,7 @@ const getInitialIntake = (): DailyIntake => {
     totalProtein: 0,
     totalCarbs: 0,
     totalFat: 0,
+    totalSaturatedFat: 0,
     totalSodium: 0,
     totalFiber: 0,
     totalSugar: 0,
@@ -37,7 +38,7 @@ export const useDailyIntake = () => {
     }))
   }, [dailyIntake])
 
-  const addMeal = (meal: FoodPrediction) => {
+  const addMeal = (meal: any) => {
     const mealWithTimestamp = {
       ...meal,
       timestamp: Date.now()
@@ -48,6 +49,7 @@ export const useDailyIntake = () => {
       totalProtein: prev.totalProtein + meal.protein,
       totalCarbs: prev.totalCarbs + meal.carbs,
       totalFat: prev.totalFat + meal.fat,
+      totalSaturatedFat: prev.totalSaturatedFat + (meal.saturatedFat || 0),
       totalSodium: prev.totalSodium + meal.sodium,
       totalFiber: prev.totalFiber + meal.fiber,
       totalSugar: prev.totalSugar + meal.sugar,
@@ -63,6 +65,7 @@ export const useDailyIntake = () => {
       totalProtein: 0,
       totalCarbs: 0,
       totalFat: 0,
+      totalSaturatedFat: 0,
       totalSodium: 0,
       totalFiber: 0,
       totalSugar: 0,

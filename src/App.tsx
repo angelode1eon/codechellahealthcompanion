@@ -11,10 +11,13 @@ import HawkerHealthTips from './components/HawkerHealthTips'
 import LoginPage from './components/LoginPage'
 import HealthSummaryCard from './components/HealthSummaryCard'
 import PersonalizedDashboard from './components/PersonalizedDashboard'
+import NutrientAlerts from './components/NutrientAlerts'
+import ConditionTrackedNutrients from './components/ConditionTrackedNutrients'
 import { SGCopywriting } from './components/SGLocalizedUI'
 import { useDailyIntake } from './hooks/useDailyIntake'
 import { useMealHistory } from './hooks/useMealHistory'
 import { useRewardsPoints } from './hooks/useRewardsPoints'
+import { useNutrientAlerts } from './hooks/useNutrientAlerts'
 import { healthhubAuth } from './services/healthhubAuth'
 import { generateHealthSummary } from './services/healthSummaryService'
 import { UserHealthProfile, HealthSummary } from './types/healthhub'
@@ -27,8 +30,12 @@ function App() {
   const { dailyIntake, addMeal } = useDailyIntake()
   const { addMealToHistory } = useMealHistory()
   const { addMealPoints, updateStreak } = useRewardsPoints()
+  const { alerts, dismissAlert } = useNutrientAlerts(
+    currentUser,
+    healthSummary?.targets || null,
+    dailyIntake
+  )
 
-  // Check authentication on mount
   useEffect(() => {
     if (healthhubAuth.isAuthenticated()) {
       const user = healthhubAuth.getCurrentUser()
@@ -61,7 +68,6 @@ function App() {
     console.log(`${SGCopywriting.rewards.earnedPoints.replace('{points}', points.toString())}`)
   }
 
-  // Show login page if not authenticated
   if (!currentUser || !healthSummary) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />
   }
@@ -73,7 +79,6 @@ function App() {
       <div className="relative z-10">
         <Header />
         
-        {/* User Info Bar */}
         <div className="bg-white border-b-8 border-memphis-purple shadow-lg">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between max-w-2xl mx-auto">
@@ -101,6 +106,8 @@ function App() {
           <div className="max-w-2xl mx-auto">
             {activeTab === 'home' && (
               <div className="space-y-8">
+                <NutrientAlerts alerts={alerts} onDismiss={dismissAlert} />
+                
                 <PersonalizedDashboard summary={healthSummary} dailyIntake={dailyIntake} />
 
                 <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-purple relative overflow-hidden">
@@ -121,7 +128,18 @@ function App() {
               </div>
             )}
 
-            {activeTab === 'log' && <FoodLog />}
+            {activeTab === 'log' && (
+              <div className="space-y-8">
+                <NutrientAlerts alerts={alerts} onDismiss={dismissAlert} />
+                <ConditionTrackedNutrients 
+                  profile={currentUser}
+                  targets={healthSummary.targets}
+                  intake={dailyIntake}
+                />
+                <FoodLog />
+              </div>
+            )}
+
             {activeTab === 'tips' && <HawkerHealthTips />}
             {activeTab === 'wrapped' && <MonthlyWrappedPage />}
             {activeTab === 'rewards' && <RewardsPage />}

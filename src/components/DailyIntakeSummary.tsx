@@ -1,12 +1,12 @@
 import React from 'react'
 import { TrendingUp, Activity, Zap, Droplet } from 'lucide-react'
-import { DailyIntake } from '../types/food'
+import { DailyIntake } from '../types/healthhub'
 
 interface DailyIntakeSummaryProps {
   intake: DailyIntake
 }
 
-const DailyIntakeSummary = ({ intake }: DailyIntakeSummaryProps) => {
+const DailyIntakeSummary: React.FC<DailyIntakeSummaryProps> = ({ intake }) => {
   const recommendedCalories = 2000
   const caloriePercentage = Math.min((intake.totalCalories / recommendedCalories) * 100, 100)
 

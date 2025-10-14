@@ -105,6 +105,11 @@ export interface NutrientTargets {
     max: number
     recommended: number
   }
+  saturatedFat: {
+    min: number
+    max: number
+    recommended: number
+  }
   sodium: {
     min: number
     max: number
@@ -147,4 +152,38 @@ export interface AuthResponse {
 export interface LoginCredentials {
   email: string
   password: string
+}
+
+// New types for condition-based tracking
+export type TrackedNutrient = 'sugar' | 'carbs' | 'sodium' | 'saturatedFat' | 'protein' | 'calories'
+
+export interface ConditionNutrientMapping {
+  condition: MedicalCondition
+  trackedNutrients: TrackedNutrient[]
+  priority: 'high' | 'medium' | 'low'
+}
+
+export interface NutrientAlert {
+  id: string
+  nutrient: TrackedNutrient
+  condition: MedicalCondition
+  currentValue: number
+  targetValue: number
+  percentage: number
+  severity: 'warning' | 'danger' | 'critical'
+  message: string
+  timestamp: number
+  dismissed: boolean
+}
+
+export interface DailyIntake {
+  totalCalories: number
+  totalProtein: number
+  totalCarbs: number
+  totalFat: number
+  totalSaturatedFat: number
+  totalSodium: number
+  totalFiber: number
+  totalSugar: number
+  meals: any[]
 }

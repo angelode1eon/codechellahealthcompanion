@@ -52,6 +52,16 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, 
       icon: '🥑'
     },
     {
+      name: 'Saturated Fat',
+      current: dailyIntake.totalSaturatedFat,
+      target: targets.saturatedFat.recommended,
+      min: targets.saturatedFat.min,
+      max: targets.saturatedFat.max,
+      unit: 'g',
+      color: '#FF8C42',
+      icon: '🥓'
+    },
+    {
       name: 'Sodium',
       current: dailyIntake.totalSodium,
       target: targets.sodium.recommended,
@@ -96,7 +106,6 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, 
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-gradient-to-br from-memphis-cyan via-memphis-purple to-memphis-pink rounded-3xl p-8 shadow-2xl text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mt-20 opacity-20"></div>
         
@@ -109,7 +118,6 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, 
         </div>
       </div>
 
-      {/* Nutrient Cards */}
       <div className="grid gap-6">
         {nutrients.map((nutrient) => {
           const progress = getProgressPercentage(nutrient.current, nutrient.target)
@@ -136,7 +144,6 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, 
                 </div>
               </div>
 
-              {/* Progress Bar */}
               <div className="mb-4">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
                   <span>Min: {nutrient.min}{nutrient.unit}</span>
@@ -156,7 +163,6 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, 
                 </div>
               </div>
 
-              {/* Range Indicator */}
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <div className="flex-1 h-2 bg-yellow-200 rounded-l-full" />
                 <div className="flex-1 h-2 bg-green-200" />
@@ -172,7 +178,6 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ summary, 
         })}
       </div>
 
-      {/* Tips Card */}
       <div className="bg-white rounded-3xl p-8 shadow-2xl border-8 border-memphis-yellow">
         <div className="flex items-center gap-3 mb-6">
           <TrendingUp className="w-10 h-10 text-memphis-purple" />

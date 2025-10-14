@@ -1,6 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Fredoka:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --memphis-coral: #FF6F61;
+  --memphis-purple: #6B5B95;
+  --memphis-green: #88B04B;
+  --memphis-pink: #F7CAC9;
+  --memphis-yellow: #FFA07A;
+  --memphis-cyan: #20B2AA;
+  --memphis-lavender: #B565A7;
+}
 
 body {
   margin: 0;
@@ -9,17 +21,52 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-@keyframes fadeIn {
-  from {
+.font-baloo {
+  font-family: 'Baloo 2', cursive;
+}
+
+.font-fredoka {
+  font-family: 'Fredoka', sans-serif;
+}
+
+.bg-memphis-coral { background-color: var(--memphis-coral); }
+.bg-memphis-purple { background-color: var(--memphis-purple); }
+.bg-memphis-green { background-color: var(--memphis-green); }
+.bg-memphis-pink { background-color: var(--memphis-pink); }
+.bg-memphis-yellow { background-color: var(--memphis-yellow); }
+.bg-memphis-cyan { background-color: var(--memphis-cyan); }
+.bg-memphis-lavender { background-color: var(--memphis-lavender); }
+
+.text-memphis-coral { color: var(--memphis-coral); }
+.text-memphis-purple { color: var(--memphis-purple); }
+.text-memphis-green { color: var(--memphis-green); }
+.text-memphis-pink { color: var(--memphis-pink); }
+.text-memphis-yellow { color: var(--memphis-yellow); }
+.text-memphis-cyan { color: var(--memphis-cyan); }
+.text-memphis-lavender { color: var(--memphis-lavender); }
+
+.border-memphis-coral { border-color: var(--memphis-coral); }
+.border-memphis-purple { border-color: var(--memphis-purple); }
+.border-memphis-green { border-color: var(--memphis-green); }
+.border-memphis-pink { border-color: var(--memphis-pink); }
+.border-memphis-yellow { border-color: var(--memphis-yellow); }
+.border-memphis-cyan { border-color: var(--memphis-cyan); }
+.border-memphis-lavender { border-color: var(--memphis-lavender); }
+
+@keyframes bounce-in {
+  0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: scale(0.9) translateY(-20px);
   }
-  to {
+  50% {
+    transform: scale(1.05) translateY(5px);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
   }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
 }
