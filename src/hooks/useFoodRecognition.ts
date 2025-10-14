@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import * as mobilenet from '@tensorflow-models/mobilenet'
 import * as tf from '@tensorflow/tfjs'
 import { FoodPrediction } from '../types/food'
-import { matchSingaporeanDish } from '../utils/singaporeanDishes'
+import { enhancePrediction } from '../utils/singaporeanDishes'
 
 export const useFoodRecognition = () => {
   const [model, setModel] = useState<mobilenet.MobileNet | null>(null)
@@ -41,27 +41,31 @@ export const useFoodRecognition = () => {
           try {
             const predictions = await model.classify(img)
             
-            const predictionNames = predictions.map(p => p.className)
-            const singaporeanDish = matchSingaporeanDish(predictionNames)
+            // Use local enhancement layer
+            const enhanced = enhancePrediction(predictions)
             
-            if (singaporeanDish) {
+            if (enhanced.enhancedDish) {
+              // Singaporean dish identified
               resolve({
-                name: singaporeanDish.name,
-                confidence: predictions[0].probability * 100,
-                calories: singaporeanDish.calories,
-                protein: singaporeanDish.protein,
-                carbs: singaporeanDish.carbs,
-                fat: singaporeanDish.fat,
-                sodium: singaporeanDish.sodium,
-                fiber: singaporeanDish.fiber,
-                sugar: singaporeanDish.sugar,
-                image: imageUrl
+                name: enhanced.enhancedDish.name,
+                confidence: enhanced.confidence,
+                calories: enhanced.enhancedDish.calories,
+                protein: enhanced.enhancedDish.protein,
+                carbs: enhanced.enhancedDish.carbs,
+                fat: enhanced.enhancedDish.fat,
+                sodium: enhanced.enhancedDish.sodium,
+                fiber: enhanced.enhancedDish.fiber,
+                sugar: enhanced.enhancedDish.sugar,
+                image: imageUrl,
+                originalPrediction: enhanced.originalPrediction,
+                mappingReason: enhanced.mappingReason
               })
             } else {
+              // No Singaporean match, use original prediction
               const topPrediction = predictions[0]
               resolve({
                 name: topPrediction.className,
-                confidence: topPrediction.probability * 100,
+                confidence: topPrediction.probability,
                 calories: 350,
                 protein: 15,
                 carbs: 45,
@@ -69,7 +73,9 @@ export const useFoodRecognition = () => {
                 sodium: 600,
                 fiber: 3,
                 sugar: 5,
-                image: imageUrl
+                image: imageUrl,
+                originalPrediction: topPrediction.className,
+                mappingReason: 'no_match'
               })
             }
           } catch (err) {

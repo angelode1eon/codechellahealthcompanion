@@ -1,7 +1,9 @@
-import React from 'react'
-import { X, Plus, Sparkles } from 'lucide-react'
+import React, { useState } from 'react'
+import { X, Plus, Sparkles, AlertCircle, CheckCircle } from 'lucide-react'
 import { FoodPrediction } from '../types/food'
 import { useRewardsPoints } from '../hooks/useRewardsPoints'
+import { getAllDishNames, getDishByName } from '../utils/singaporeanDishes'
+import { useUserCorrections } from '../hooks/useUserCorrections'
 
 interface FoodResultProps {
   prediction: FoodPrediction
@@ -11,8 +13,47 @@ interface FoodResultProps {
 
 const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
   const { calculateMealPoints, getPointsReason } = useRewardsPoints()
+  const { addCorrection } = useUserCorrections()
+  const [showCorrection, setShowCorrection] = useState(false)
+  const [selectedDish, setSelectedDish] = useState(prediction.name)
+  const [correctionSaved, setCorrectionSaved] = useState(false)
+  
   const points = calculateMealPoints(prediction)
   const reason = getPointsReason(points)
+  const allDishes = getAllDishNames()
+
+  const handleCorrection = () => {
+    if (selectedDish !== prediction.name) {
+      const correctedDish = getDishByName(selectedDish)
+      if (correctedDish) {
+        // Save correction for learning
+        addCorrection(prediction.originalPrediction || prediction.name, selectedDish)
+        
+        // Update prediction with corrected data
+        const correctedPrediction: FoodPrediction = {
+          ...prediction,
+          name: correctedDish.name,
+          calories: correctedDish.calories,
+          protein: correctedDish.protein,
+          carbs: correctedDish.carbs,
+          fat: correctedDish.fat,
+          sodium: correctedDish.sodium,
+          fiber: correctedDish.fiber,
+          sugar: correctedDish.sugar,
+          mappingReason: 'user_corrected',
+          userCorrected: true
+        }
+        
+        setCorrectionSaved(true)
+        setTimeout(() => {
+          onAddToLog(correctedPrediction)
+          onClose()
+        }, 1000)
+      }
+    } else {
+      handleAddToLog()
+    }
+  }
 
   const handleAddToLog = () => {
     onAddToLog({ ...prediction, points })
@@ -26,6 +67,40 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
     return 'from-memphis-purple to-memphis-lavender'
   }
 
+  const getMappingBadge = () => {
+    if (prediction.userCorrected) {
+      return (
+        <div className="bg-memphis-green text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1">
+          <CheckCircle className="w-4 h-4" />
+          User Confirmed
+        </div>
+      )
+    }
+    
+    switch (prediction.mappingReason) {
+      case 'keyword_match':
+        return (
+          <div className="bg-memphis-green text-white px-3 py-1 rounded-lg text-sm font-bold">
+            🇸🇬 Local Dish
+          </div>
+        )
+      case 'generic_mapping':
+        return (
+          <div className="bg-memphis-yellow text-white px-3 py-1 rounded-lg text-sm font-bold">
+            🇸🇬 Mapped to Local
+          </div>
+        )
+      case 'no_match':
+        return (
+          <div className="bg-gray-400 text-white px-3 py-1 rounded-lg text-sm font-bold">
+            Global Prediction
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fadeIn">
       <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-8 border-memphis-purple relative">
@@ -37,6 +112,13 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
         </button>
 
         <div className="p-8">
+          {correctionSaved && (
+            <div className="bg-memphis-green text-white rounded-2xl p-4 mb-4 flex items-center gap-3 animate-fadeIn">
+              <CheckCircle className="w-6 h-6" />
+              <span className="font-bold">Thanks for the feedback! We'll learn from this.</span>
+            </div>
+          )}
+
           {/* Points Badge */}
           <div className={`bg-gradient-to-r ${getPointsColor(points)} rounded-3xl p-6 mb-6 text-white shadow-lg`}>
             <div className="flex items-center justify-between">
@@ -61,12 +143,67 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
           />
 
           <div className="mb-6">
-            <h2 className="text-4xl font-bold text-memphis-purple mb-2">{prediction.name}</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="text-4xl font-bold text-memphis-purple">{prediction.name}</h2>
+              {getMappingBadge()}
+            </div>
+            
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="bg-memphis-green text-white px-4 py-2 rounded-xl font-bold">
                 {(prediction.confidence * 100).toFixed(0)}% confident
               </div>
+              
+              {prediction.originalPrediction && prediction.originalPrediction !== prediction.name && (
+                <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm">
+                  Originally: {prediction.originalPrediction}
+                </div>
+              )}
             </div>
+
+            {/* Correction Interface */}
+            {!showCorrection && !correctionSaved && (
+              <button
+                onClick={() => setShowCorrection(true)}
+                className="mt-4 text-memphis-purple hover:text-memphis-coral font-bold flex items-center gap-2 transition-colors"
+              >
+                <AlertCircle className="w-5 h-5" />
+                Not quite right? Click to correct
+              </button>
+            )}
+
+            {showCorrection && !correctionSaved && (
+              <div className="mt-4 bg-memphis-pink rounded-2xl p-4 animate-fadeIn">
+                <label className="block text-memphis-purple font-bold mb-2">
+                  Select the correct dish:
+                </label>
+                <select
+                  value={selectedDish}
+                  onChange={(e) => setSelectedDish(e.target.value)}
+                  className="w-full p-3 rounded-xl border-4 border-memphis-purple font-bold text-lg mb-3"
+                >
+                  <option value={prediction.name}>{prediction.name} (Keep current)</option>
+                  <optgroup label="Singaporean Dishes">
+                    {allDishes.map(dish => (
+                      <option key={dish} value={dish}>{dish}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCorrection}
+                    className="flex-1 bg-memphis-green text-white font-bold py-3 px-4 rounded-xl hover:bg-opacity-90 transition-all"
+                  >
+                    {selectedDish !== prediction.name ? 'Confirm Correction' : 'Keep & Continue'}
+                  </button>
+                  <button
+                    onClick={() => setShowCorrection(false)}
+                    className="px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-memphis-pink rounded-2xl p-6 mb-6">
@@ -109,13 +246,15 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
             </div>
           </div>
 
-          <button
-            onClick={handleAddToLog}
-            className="w-full bg-memphis-purple hover:bg-opacity-90 text-white font-bold py-6 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-6 border-memphis-coral flex items-center justify-center gap-3"
-          >
-            <Plus className="w-8 h-8" strokeWidth={2.5} />
-            <span className="text-2xl">Add to Food Log (+{points} points)</span>
-          </button>
+          {!showCorrection && (
+            <button
+              onClick={handleAddToLog}
+              className="w-full bg-memphis-purple hover:bg-opacity-90 text-white font-bold py-6 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-6 border-memphis-coral flex items-center justify-center gap-3"
+            >
+              <Plus className="w-8 h-8" strokeWidth={2.5} />
+              <span className="text-2xl">Add to Food Log (+{points} points)</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
