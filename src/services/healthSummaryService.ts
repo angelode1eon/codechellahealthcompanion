@@ -52,7 +52,6 @@ const CONDITION_DETAILS: Record<MedicalCondition, Omit<ConditionNote, 'severity'
 }
 
 const getSeverity = (condition: MedicalCondition, profile: UserHealthProfile): 'mild' | 'moderate' | 'severe' => {
-  // Simple severity assessment based on age and BMI
   const bmi = calculateBMI(profile.weight, profile.height)
   const age = profile.age
 
@@ -85,19 +84,16 @@ const getRecommendations = (profile: UserHealthProfile): string[] => {
   const bmi = calculateBMI(profile.weight, profile.height)
   const conditions = profile.medicalConditions
 
-  // BMI-based recommendations
   if (bmi >= 27.5) {
     recommendations.push('Consider weight management program for better health outcomes')
   } else if (bmi < 18.5) {
     recommendations.push('Increase calorie intake with nutrient-dense foods')
   }
 
-  // Activity-based recommendations
   if (profile.activityLevel === 'sedentary') {
     recommendations.push('Aim for 150 minutes of moderate exercise per week (HPB guideline)')
   }
 
-  // Condition-specific recommendations
   if (conditions.includes('diabetes')) {
     recommendations.push('Monitor blood glucose regularly and maintain consistent meal timing')
   }
@@ -110,7 +106,6 @@ const getRecommendations = (profile: UserHealthProfile): string[] => {
     recommendations.push('Choose lean proteins and increase omega-3 rich foods like fish')
   }
 
-  // General recommendations
   if (recommendations.length === 0) {
     recommendations.push('Maintain current healthy habits and stay active')
     recommendations.push('Eat a variety of colorful vegetables daily')
@@ -131,7 +126,6 @@ export const generateHealthSummary = (profile: UserHealthProfile): HealthSummary
       severity: getSeverity(condition, profile)
     }))
 
-  // If no conditions, add general health note
   if (conditionNotes.length === 0) {
     conditionNotes.push({
       ...CONDITION_DETAILS['none'],

@@ -6,6 +6,7 @@ export interface SingaporeanDish {
   protein: number
   carbs: number
   fat: number
+  saturatedFat?: number
   sodium: number
   fiber: number
   sugar: number
@@ -19,6 +20,7 @@ export interface FoodPrediction {
   protein: number
   carbs: number
   fat: number
+  saturatedFat?: number
   sodium: number
   fiber: number
   sugar: number
@@ -35,6 +37,7 @@ export interface DailyIntake {
   totalProtein: number
   totalCarbs: number
   totalFat: number
+  totalSaturatedFat: number
   totalSodium: number
   totalFiber: number
   totalSugar: number
@@ -46,4 +49,20 @@ export interface UserCorrection {
   originalPrediction: string
   correctedDish: string
   imageHash?: string
+}
+
+export interface MealHistory {
+  [dateKey: string]: FoodPrediction[]
+}
+
+export interface DailyStats {
+  date: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  sodium: number
+  fiber: number
+  sugar: number
+  mealCount: number
 }

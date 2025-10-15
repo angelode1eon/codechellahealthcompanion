@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, BookOpen, TrendingUp, Award, Calendar, User } from 'lucide-react'
+import { Home, BookOpen, TrendingUp, Award, MessageCircle } from 'lucide-react'
 
 interface NavigationProps {
   activeTab: string
@@ -10,10 +10,9 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: 'home', icon: Home, label: 'Home', emoji: '🏠' },
     { id: 'log', icon: BookOpen, label: 'Log', emoji: '📖' },
-    { id: 'tips', icon: TrendingUp, label: 'Tips', emoji: '💡' },
+    { id: 'insights', icon: TrendingUp, label: 'Insights', emoji: '💡' },
     { id: 'rewards', icon: Award, label: 'Rewards', emoji: '🏆' },
-    { id: 'wrapped', icon: Calendar, label: 'Wrapped', emoji: '📊' },
-    { id: 'profile', icon: User, label: 'Profile', emoji: '👤' }
+    { id: 'buddy', icon: MessageCircle, label: 'Buddy Ah', emoji: '💬' }
   ]
 
   return (
@@ -28,15 +27,15 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all transform ${
+                className={`flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all transform ${
                   isActive
                     ? 'bg-memphis-purple text-white scale-110 shadow-lg'
                     : 'text-gray-600 hover:bg-memphis-pink hover:scale-105'
                 }`}
               >
-                <Icon className={`w-6 h-6 ${isActive ? 'animate-bounce' : ''}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'animate-bounce' : ''}`} />
                 <span className="text-xs font-bold">{tab.label}</span>
-                {isActive && <span className="text-lg">{tab.emoji}</span>}
+                {isActive && <span className="text-base">{tab.emoji}</span>}
               </button>
             )
           })}

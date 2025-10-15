@@ -4,6 +4,7 @@ import { useMealHistory } from '../hooks/useMealHistory'
 import WeeklyView from './WeeklyView'
 import MonthlyView from './MonthlyView'
 import AllMealsView from './AllMealsView'
+import FindHealthierButton from './FindHealthierButton'
 
 type ViewMode = 'all' | 'weekly' | 'monthly'
 
@@ -17,6 +18,9 @@ const FoodLog = () => {
 
   return (
     <div className="space-y-6">
+      {/* Find Healthier Option Button */}
+      <FindHealthierButton />
+
       <div className="bg-white rounded-3xl p-6 shadow-2xl border-8 border-memphis-green">
         <h2 className="text-4xl font-bold text-memphis-purple mb-6">Food Log 📝</h2>
         

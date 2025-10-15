@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react'
-import { Camera, Upload, Loader2 } from 'lucide-react'
-import { useFoodRecognition } from '../hooks/useFoodRecognition'
+import { Camera, Upload, Loader2, AlertCircle } from 'lucide-react'
+import { useFoodRecognition } from '@/hooks/useFoodRecognition'
 import FoodResult from './FoodResult'
-import { FoodPrediction } from '../types/food'
+import { FoodPrediction } from '@/types/food'
 
 interface UploadButtonProps {
   onAddMeal: (meal: FoodPrediction) => void
@@ -10,8 +10,7 @@ interface UploadButtonProps {
 
 const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { recognizeFood, isLoading: modelLoading, isModelReady } = useFoodRecognition()
-  const [isProcessing, setIsProcessing] = useState(false)
+  const { recognizeFood, isLoading, error } = useFoodRecognition()
   const [result, setResult] = useState<FoodPrediction | null>(null)
 
   const handleClick = () => {
@@ -21,7 +20,6 @@ const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      setIsProcessing(true)
       setResult(null)
       
       try {
@@ -31,10 +29,11 @@ const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
         }
       } catch (error) {
         console.error('Error processing image:', error)
-      } finally {
-        setIsProcessing(false)
       }
     }
+    
+    // Reset input so same file can be selected again
+    event.target.value = ''
   }
 
   const handleClose = () => {
@@ -54,26 +53,21 @@ const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
         capture="environment"
         onChange={handleFileChange}
         className="hidden"
-        disabled={!isModelReady || isProcessing}
+        disabled={isLoading}
       />
       
       <button
         onClick={handleClick}
-        disabled={!isModelReady || isProcessing}
+        disabled={isLoading}
         className="w-full bg-memphis-coral hover:bg-opacity-90 text-white font-bold py-6 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-6 border-memphis-purple relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
       >
         <div className="absolute inset-0 bg-memphis-yellow opacity-0 group-hover:opacity-20 transition-opacity"></div>
         
         <div className="relative z-10 flex items-center justify-center gap-4">
-          {isProcessing ? (
+          {isLoading ? (
             <>
               <Loader2 className="w-8 h-8 animate-spin" strokeWidth={2.5} />
               <span className="text-2xl">Analyzing Food...</span>
-            </>
-          ) : modelLoading ? (
-            <>
-              <Loader2 className="w-8 h-8 animate-spin" strokeWidth={2.5} />
-              <span className="text-2xl">Loading AI Model...</span>
             </>
           ) : (
             <>
@@ -86,7 +80,7 @@ const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
           )}
         </div>
         
-        {!isProcessing && !modelLoading && (
+        {!isLoading && (
           <>
             <div className="absolute top-2 right-2 w-6 h-6 bg-memphis-yellow rounded-full"></div>
             <div className="absolute bottom-2 left-2 w-4 h-4 bg-memphis-cyan"></div>
@@ -94,9 +88,35 @@ const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
         )}
       </button>
       
+      {error && (
+        <div className="mt-4 bg-red-100 border-4 border-red-500 rounded-2xl p-4 flex items-start gap-3 animate-fadeIn">
+          <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-1" />
+          <div>
+            <p className="text-red-700 font-bold text-lg">Oops! Something went wrong</p>
+            <p className="text-red-600 mt-1">{error}</p>
+            {error.includes('API key') && (
+              <p className="text-red-600 mt-2 text-sm">
+                Please add your Clarifai API key to the .env file. Get one at{' '}
+                <a 
+                  href="https://clarifai.com/settings/security" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="underline font-bold"
+                >
+                  clarifai.com/settings/security
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+      
       <div className="mt-4 text-center">
         <p className="text-lg text-memphis-purple font-bold">
-          {modelLoading ? '🤖 AI Model Loading...' : '📸 Snap a pic or choose from gallery'}
+          📸 Snap a pic or choose from gallery
+        </p>
+        <p className="text-sm text-gray-600 mt-2">
+          Powered by Clarifai AI 🤖
         </p>
       </div>
     </div>

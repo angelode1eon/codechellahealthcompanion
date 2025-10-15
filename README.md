@@ -1,116 +1,143 @@
-# Health Companion 🇸🇬
+# Health Companion 🍜
 
-A Singapore-localized health tracking app with AI-powered food recognition, gamification, and hawker health tips!
+A Singapore-focused health tracking app with AI-powered food recognition using Clarifai Food Model API.
 
 ## Features
 
-### 🤖 AI Food Recognition
-- TensorFlow.js powered image classification
-- Custom Singaporean dish recognition (15+ local dishes)
-- HPB-referenced nutrition data
-
-### 🏪 Hawker Health Tips
-- 10+ popular hawker dishes with healthier alternatives
-- Singlish-friendly ordering tips
-- Calorie and sodium savings calculator
-- Popular hawker center locations
-
-### 🏥 HealthHub Integration
-- Connect to Singapore's official health platform
-- Access HPB nutrition database
-- Healthier Choice Symbol (HCS) recognition
-- Verified nutrition data
-
-### 🎮 Gamification
-- Points system (0-100 per meal)
-- 7-tier badge system
-- Streak tracking
-- Monthly Health Wrapped
-
-### 📊 Analytics
-- Daily intake tracking
-- Weekly/monthly trends
-- Nutrient improvement tracking
-- Health score calculation
-
-## Singapore-Specific Features
-
-### Singlish UI
-- "Shiok" success messages
-- "Alamak" error messages
-- "Lah", "Leh", "Mah" copywriting
-- Local context and humor
-
-### Local Food Database
-- Chicken Rice, Laksa, Char Kway Teow
-- Nasi Lemak, Hokkien Mee, Bak Chor Mee
-- Roti Prata, Carrot Cake, Kopi
-- And many more!
-
-### Hawker Culture
-- Ordering tips in Singlish
-- Popular hawker center locations
-- "少油" (less oil) suggestions
-- Sharing culture tips
+- 📸 **AI Food Recognition**: Upload photos and get instant food identification using Clarifai's advanced food model
+- 🇸🇬 **Singapore-First**: Specialized recognition for local dishes like Chicken Rice, Laksa, Nasi Lemak, and more
+- 📊 **Nutrition Tracking**: Detailed nutritional information based on HPB (Health Promotion Board) data
+- 🎮 **Gamification**: Earn health points (0-100) for every meal with 7 badge tiers
+- 📈 **Insights**: Track your progress with beautiful charts and monthly Health Wrapped summaries
+- 🤖 **Buddy Ah Chatbot**: Your friendly Singlish-speaking health companion
+- 🔒 **Secure**: Encrypted localStorage for data privacy
 
 ## Setup
 
-1. Install dependencies:
-```bash
-npm install
-```
+1. **Clone and Install**
+   ```bash
+   npm install
+   ```
 
-2. Configure HealthHub API (optional):
-```bash
-cp .env.example .env
-# Add your HealthHub API key to .env
-```
+2. **Configure Clarifai API**
+   - Get your Personal Access Token (PAT) from [Clarifai Settings](https://clarifai.com/settings/security)
+   - Copy `.env.example` to `.env`
+   - Add your Clarifai PAT:
+     ```
+     VITE_CLARIFAI_PAT=your_personal_access_token_here
+     ```
 
-3. Start development server:
-```bash
-npm run dev
-```
+3. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
 
-## HealthHub API Setup
+## How It Works
 
-To get accurate HPB nutrition data:
+### Food Recognition Flow
 
-1. Visit [HealthHub Developer Portal](https://www.healthhub.sg/developer)
-2. Sign up for an API key
-3. Add the key to your `.env` file
-4. Connect through the HealthHub tab in the app
+1. **Upload Photo**: User takes or uploads a food photo
+2. **Clarifai API**: Image is sent to Clarifai Food Model API
+3. **Prediction**: API returns top food prediction with confidence score
+4. **Enhancement**: Local layer maps predictions to Singaporean dishes when possible
+5. **Display**: Shows food name, confidence score, and nutritional information
+6. **User Correction**: Users can correct predictions to improve accuracy
 
-**Note:** The app works with local data if no API key is provided.
+### Confidence Threshold
+
+- Minimum 50% confidence required to identify food
+- Below threshold shows "Unknown dish"
+- Users can manually select correct dish from database
+
+### Singaporean Dish Mapping
+
+The app includes a local enhancement layer that maps generic predictions to specific Singaporean dishes:
+
+- **Keyword Matching**: Direct matches (e.g., "chicken rice" → "Chicken Rice")
+- **Generic Mapping**: Maps similar foods (e.g., "rice" → "Chicken Rice")
+- **User Corrections**: Learns from user feedback
+
+### Supported Local Dishes
+
+- Chicken Rice
+- Laksa
+- Nasi Lemak
+- Char Kway Teow
+- Hokkien Mee
+- Roti Prata
+- Satay
+- Bak Kut Teh
+- Chilli Crab
+- Hainanese Curry Rice
+- Mee Goreng
+- Carrot Cake
+- Popiah
 
 ## Tech Stack
 
-- React + TypeScript
-- Vite
-- TailwindCSS
-- TensorFlow.js (MobileNet)
-- Recharts
-- localStorage
+- **Frontend**: React + TypeScript + Vite
+- **Styling**: TailwindCSS (Memphis Design theme)
+- **AI**: Clarifai Food Model API
+- **Charts**: Recharts
+- **Animations**: Framer Motion
+- **Security**: crypto-js for encryption
 
-## Memphis Design
+## API Configuration
 
-Bold, colorful, geometric design inspired by 1980s Memphis Group:
-- Bright saturated colors
-- Geometric patterns
-- Playful typography (Baloo 2, Fredoka)
-- Fun, engaging UI
+### Clarifai Settings
+
+Default configuration (can be customized in `.env`):
+
+```
+VITE_CLARIFAI_USER_ID=clarifai
+VITE_CLARIFAI_APP_ID=main
+VITE_CLARIFAI_MODEL_ID=food-item-recognition
+```
+
+### Error Handling
+
+The app gracefully handles:
+- Missing API key
+- Network failures
+- API rate limits
+- Low confidence predictions
+- Unknown food items
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── components/        # React components
+├── hooks/            # Custom React hooks
+├── services/         # API services (Clarifai)
+├── utils/            # Utility functions
+├── types/            # TypeScript types
+└── pages/            # Page components
+```
+
+### Key Files
+
+- `src/services/clarifaiService.ts` - Clarifai API integration
+- `src/hooks/useFoodRecognition.ts` - Food recognition hook
+- `src/utils/singaporeanDishes.ts` - Local dish database
+- `src/components/FoodResult.tsx` - Results display with correction UI
 
 ## Contributing
 
 Contributions welcome! Please ensure:
-- Singapore context is maintained
-- Singlish copywriting is authentic
-- HPB data accuracy
-- Memphis design consistency
+- TypeScript types are properly defined
+- Error handling is comprehensive
+- UI follows Memphis Design theme
+- Singapore-first approach is maintained
 
 ## License
 
 MIT
 
----
+## Credits
 
-Made with ❤️ for Singaporeans by Singaporeans! 🇸🇬
+- Powered by [Clarifai](https://clarifai.com) Food Model API
+- Nutrition data from Singapore Health Promotion Board (HPB)
+- Design inspired by Memphis Design movement

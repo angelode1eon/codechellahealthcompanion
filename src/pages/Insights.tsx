@@ -3,6 +3,7 @@ import { TrendingUp, Calendar, BarChart3 } from 'lucide-react'
 import { useFoodLog } from '../hooks/useFoodLog'
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import CorrectionStats from '../components/CorrectionStats'
+import BuddyAhChat from '../components/BuddyAhChat'
 
 type ViewMode = 'weekly' | 'monthly'
 
@@ -52,7 +53,7 @@ const Insights = () => {
   const activeDays = chartData.filter(d => d.meals > 0).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-memphis-pink via-memphis-lavender to-memphis-cyan p-6">
+    <div className="min-h-screen bg-gradient-to-br from-memphis-pink via-memphis-lavender to-memphis-cyan p-6 pb-24">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <div className="bg-memphis-purple p-4 rounded-3xl">
@@ -206,6 +207,13 @@ const Insights = () => {
           </div>
         )}
       </div>
+
+      {/* Buddy Ah Chat */}
+      <BuddyAhChat
+        onLogMealClick={() => window.location.href = '/'}
+        onViewProgressClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        onFindHealthierClick={() => window.location.href = '/'}
+      />
     </div>
   )
 }

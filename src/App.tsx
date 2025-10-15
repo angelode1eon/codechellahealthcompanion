@@ -13,6 +13,8 @@ import HealthSummaryCard from './components/HealthSummaryCard'
 import PersonalizedDashboard from './components/PersonalizedDashboard'
 import NutrientAlerts from './components/NutrientAlerts'
 import ConditionTrackedNutrients from './components/ConditionTrackedNutrients'
+import BuddyAhPage from './pages/BuddyAhPage'
+import BuddyAhChat from './components/BuddyAhChat'
 import { SGCopywriting } from './components/SGLocalizedUI'
 import { useDailyIntake } from './hooks/useDailyIntake'
 import { useMealHistory } from './hooks/useMealHistory'
@@ -70,6 +72,20 @@ function App() {
 
   if (!currentUser || !healthSummary) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />
+  }
+
+  // Show Buddy Ah page without floating chat
+  if (activeTab === 'buddy') {
+    return (
+      <div className="min-h-screen bg-memphis-pink font-baloo relative overflow-hidden">
+        <GeometricBackground />
+        
+        <div className="relative z-10">
+          <BuddyAhPage />
+          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -140,14 +156,22 @@ function App() {
               </div>
             )}
 
-            {activeTab === 'tips' && <HawkerHealthTips />}
+            {activeTab === 'insights' && <HawkerHealthTips />}
             {activeTab === 'wrapped' && <MonthlyWrappedPage />}
             {activeTab === 'rewards' && <RewardsPage />}
-            {activeTab === 'profile' && <HealthSummaryCard summary={healthSummary} />}
           </div>
         </main>
 
         <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+        {/* Show floating chat only on Home and Insights pages */}
+        {(activeTab === 'home' || activeTab === 'insights') && (
+          <BuddyAhChat
+            onLogMealClick={() => setActiveTab('home')}
+            onViewProgressClick={() => setActiveTab('insights')}
+            onFindHealthierClick={() => setActiveTab('home')}
+          />
+        )}
       </div>
     </div>
   )

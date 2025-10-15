@@ -16,7 +16,7 @@ export const useMealHistory = () => {
   }, [history])
 
   const addMealToHistory = (meal: FoodPrediction) => {
-    const dateKey = new Date(meal.timestamp).toDateString()
+    const dateKey = new Date(meal.timestamp!).toDateString()
     setHistory(prev => ({
       ...prev,
       [dateKey]: [...(prev[dateKey] || []), meal]
@@ -100,7 +100,7 @@ export const useMealHistory = () => {
   const getAllMeals = (): FoodPrediction[] => {
     return Object.values(history)
       .flat()
-      .sort((a, b) => b.timestamp - a.timestamp)
+      .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
   }
 
   return {
