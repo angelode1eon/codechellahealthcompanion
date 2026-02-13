@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Plus, Sparkles, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react'
+import { X, Plus, Sparkles, AlertCircle, CheckCircle } from 'lucide-react'
 import { FoodPrediction } from '../types/food'
 import { useRewardsPoints } from '../hooks/useRewardsPoints'
 import { getAllDishNames, getDishByName } from '../utils/singaporeanDishes'
@@ -18,9 +18,8 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
   const [selectedDish, setSelectedDish] = useState(prediction.name)
   const [correctionSaved, setCorrectionSaved] = useState(false)
   
-  const isUnknownDish = prediction.name === 'Unknown dish'
-  const points = isUnknownDish ? 0 : calculateMealPoints(prediction)
-  const reason = isUnknownDish ? 'Cannot calculate points for unknown dish' : getPointsReason(points)
+  const points = calculateMealPoints(prediction)
+  const reason = getPointsReason(points)
   const allDishes = getAllDishNames()
 
   const handleCorrection = () => {
@@ -57,11 +56,6 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
   }
 
   const handleAddToLog = () => {
-    if (isUnknownDish) {
-      // For unknown dishes, prompt user to select correct dish
-      setShowCorrection(true)
-      return
-    }
     onAddToLog({ ...prediction, points })
     onClose()
   }
@@ -74,15 +68,6 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
   }
 
   const getMappingBadge = () => {
-    if (isUnknownDish) {
-      return (
-        <div className="bg-gray-400 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1">
-          <HelpCircle className="w-4 h-4" />
-          Unknown Dish
-        </div>
-      )
-    }
-
     if (prediction.userCorrected) {
       return (
         <div className="bg-memphis-green text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1">
@@ -134,34 +119,22 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
             </div>
           )}
 
-          {isUnknownDish && !showCorrection && (
-            <div className="bg-memphis-yellow text-white rounded-2xl p-4 mb-4 flex items-start gap-3 animate-fadeIn">
-              <AlertCircle className="w-6 h-6 flex-shrink-0 mt-1" />
+          {/* Points Badge */}
+          <div className={`bg-gradient-to-r ${getPointsColor(points)} rounded-3xl p-6 mb-6 text-white shadow-lg`}>
+            <div className="flex items-center justify-between">
               <div>
-                <p className="font-bold text-lg">Cannot identify this food</p>
-                <p className="mt-1">Please help us by selecting the correct dish below</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-6 h-6" />
+                  <span className="text-lg font-bold">Health Points</span>
+                </div>
+                <div className="text-6xl font-bold">{points}</div>
+                <p className="text-lg opacity-90 mt-2">{reason}</p>
+              </div>
+              <div className="text-8xl">
+                {points >= 80 ? '🌟' : points >= 60 ? '💚' : points >= 40 ? '👍' : '✨'}
               </div>
             </div>
-          )}
-
-          {/* Points Badge - Only show if not unknown dish */}
-          {!isUnknownDish && (
-            <div className={`bg-gradient-to-r ${getPointsColor(points)} rounded-3xl p-6 mb-6 text-white shadow-lg`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="w-6 h-6" />
-                    <span className="text-lg font-bold">Health Points</span>
-                  </div>
-                  <div className="text-6xl font-bold">{points}</div>
-                  <p className="text-lg opacity-90 mt-2">{reason}</p>
-                </div>
-                <div className="text-8xl">
-                  {points >= 80 ? '🌟' : points >= 60 ? '💚' : points >= 40 ? '👍' : '✨'}
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
 
           <img
             src={prediction.image}
@@ -170,17 +143,17 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
           />
 
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-3 mb-3">
               <h2 className="text-4xl font-bold text-memphis-purple">{prediction.name}</h2>
               {getMappingBadge()}
             </div>
             
             <div className="flex items-center gap-2 flex-wrap">
-              <div className={`${isUnknownDish ? 'bg-gray-400' : 'bg-memphis-green'} text-white px-4 py-2 rounded-xl font-bold`}>
+              <div className="bg-memphis-green text-white px-4 py-2 rounded-xl font-bold">
                 {(prediction.confidence * 100).toFixed(0)}% confident
               </div>
               
-              {prediction.originalPrediction && prediction.originalPrediction !== prediction.name && !isUnknownDish && (
+              {prediction.originalPrediction && prediction.originalPrediction !== prediction.name && (
                 <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-sm">
                   Originally: {prediction.originalPrediction}
                 </div>
@@ -188,7 +161,7 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
             </div>
 
             {/* Correction Interface */}
-            {!showCorrection && !correctionSaved && !isUnknownDish && (
+            {!showCorrection && !correctionSaved && (
               <button
                 onClick={() => setShowCorrection(true)}
                 className="mt-4 text-memphis-purple hover:text-memphis-coral font-bold flex items-center gap-2 transition-colors"
@@ -198,18 +171,17 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
               </button>
             )}
 
-            {(showCorrection || isUnknownDish) && !correctionSaved && (
+            {showCorrection && !correctionSaved && (
               <div className="mt-4 bg-memphis-pink rounded-2xl p-4 animate-fadeIn">
                 <label className="block text-memphis-purple font-bold mb-2">
-                  {isUnknownDish ? 'What dish is this?' : 'Select the correct dish:'}
+                  Select the correct dish:
                 </label>
                 <select
                   value={selectedDish}
                   onChange={(e) => setSelectedDish(e.target.value)}
                   className="w-full p-3 rounded-xl border-4 border-memphis-purple font-bold text-lg mb-3"
                 >
-                  {!isUnknownDish && <option value={prediction.name}>{prediction.name} (Keep current)</option>}
-                  {isUnknownDish && <option value="">-- Select a dish --</option>}
+                  <option value={prediction.name}>{prediction.name} (Keep current)</option>
                   <optgroup label="Singaporean Dishes">
                     {allDishes.map(dish => (
                       <option key={dish} value={dish}>{dish}</option>
@@ -219,68 +191,62 @@ const FoodResult = ({ prediction, onClose, onAddToLog }: FoodResultProps) => {
                 <div className="flex gap-2">
                   <button
                     onClick={handleCorrection}
-                    disabled={isUnknownDish && !selectedDish}
-                    className="flex-1 bg-memphis-green text-white font-bold py-3 px-4 rounded-xl hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-memphis-green text-white font-bold py-3 px-4 rounded-xl hover:bg-opacity-90 transition-all"
                   >
-                    {selectedDish !== prediction.name || isUnknownDish ? 'Confirm Selection' : 'Keep & Continue'}
+                    {selectedDish !== prediction.name ? 'Confirm Correction' : 'Keep & Continue'}
                   </button>
-                  {!isUnknownDish && (
-                    <button
-                      onClick={() => setShowCorrection(false)}
-                      className="px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all"
-                    >
-                      Cancel
-                    </button>
-                  )}
+                  <button
+                    onClick={() => setShowCorrection(false)}
+                    className="px-4 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Nutrition Facts - Only show if not unknown dish or dish selected */}
-          {(!isUnknownDish || selectedDish) && (
-            <div className="bg-memphis-pink rounded-2xl p-6 mb-6">
-              <h3 className="text-2xl font-bold text-memphis-purple mb-4">Nutrition Facts</h3>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Calories</div>
-                  <div className="text-3xl font-bold text-memphis-coral">{prediction.calories}</div>
-                  <div className="text-xs text-gray-600">kcal</div>
-                </div>
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Protein</div>
-                  <div className="text-3xl font-bold text-memphis-green">{prediction.protein}g</div>
-                </div>
+          <div className="bg-memphis-pink rounded-2xl p-6 mb-6">
+            <h3 className="text-2xl font-bold text-memphis-purple mb-4">Nutrition Facts</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="bg-white rounded-xl p-4">
+                <div className="text-sm text-gray-600 mb-1">Calories</div>
+                <div className="text-3xl font-bold text-memphis-coral">{prediction.calories}</div>
+                <div className="text-xs text-gray-600">kcal</div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Carbs</div>
-                  <div className="text-2xl font-bold text-memphis-yellow">{prediction.carbs}g</div>
-                </div>
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Fat</div>
-                  <div className="text-2xl font-bold text-memphis-lavender">{prediction.fat}g</div>
-                </div>
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Sodium</div>
-                  <div className="text-2xl font-bold text-memphis-cyan">{prediction.sodium}mg</div>
-                </div>
-                <div className="bg-white rounded-xl p-4">
-                  <div className="text-sm text-gray-600 mb-1">Fiber</div>
-                  <div className="text-2xl font-bold text-memphis-green">{prediction.fiber}g</div>
-                </div>
-              </div>
-
-              <div className="mt-4 bg-white rounded-xl p-4">
-                <div className="text-sm text-gray-600 mb-1">Sugar</div>
-                <div className="text-2xl font-bold text-memphis-coral">{prediction.sugar}g</div>
+              <div className="bg-white rounded-xl p-4">
+                <div className="text-sm text-gray-600 mb-1">Protein</div>
+                <div className="text-3xl font-bold text-memphis-green">{prediction.protein}g</div>
               </div>
             </div>
-          )}
 
-          {!showCorrection && !isUnknownDish && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl p-4">
+                <div className="text-sm text-gray-600 mb-1">Carbs</div>
+                <div className="text-2xl font-bold text-memphis-yellow">{prediction.carbs}g</div>
+              </div>
+              <div className="bg-white rounded-xl p-4">
+                <div className="text-sm text-gray-600 mb-1">Fat</div>
+                <div className="text-2xl font-bold text-memphis-lavender">{prediction.fat}g</div>
+              </div>
+              <div className="bg-white rounded-xl p-4">
+                <div className="text-sm text-gray-600 mb-1">Sodium</div>
+                <div className="text-2xl font-bold text-memphis-cyan">{prediction.sodium}mg</div>
+              </div>
+              <div className="bg-white rounded-xl p-4">
+                <div className="text-sm text-gray-600 mb-1">Fiber</div>
+                <div className="text-2xl font-bold text-memphis-green">{prediction.fiber}g</div>
+              </div>
+            </div>
+
+            <div className="mt-4 bg-white rounded-xl p-4">
+              <div className="text-sm text-gray-600 mb-1">Sugar</div>
+              <div className="text-2xl font-bold text-memphis-coral">{prediction.sugar}g</div>
+            </div>
+          </div>
+
+          {!showCorrection && (
             <button
               onClick={handleAddToLog}
               className="w-full bg-memphis-purple hover:bg-opacity-90 text-white font-bold py-6 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-6 border-memphis-coral flex items-center justify-center gap-3"

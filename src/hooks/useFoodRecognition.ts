@@ -1,96 +1,103 @@
-import { useState, useCallback } from 'react'
-import { FoodPrediction } from '@/types/food'
-import { enhancePrediction } from '@/utils/singaporeanDishes'
-import { clarifaiService, ClarifaiFoodPrediction } from '@/services/clarifaiService'
+import { useState, useEffect, useCallback } from 'react'
+import * as mobilenet from '@tensorflow-models/mobilenet'
+import * as tf from '@tensorflow/tfjs'
+import { FoodPrediction } from '../types/food'
+import { enhancePrediction } from '../utils/singaporeanDishes'
 
 export const useFoodRecognition = () => {
-  const [isLoading, setIsLoading] = useState(false)
+  const [model, setModel] = useState<mobilenet.MobileNet | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const recognizeFood = useCallback(async (imageFile: File): Promise<FoodPrediction | null> => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Call Clarifai API for food recognition
-      const clarifaiPrediction: ClarifaiFoodPrediction = await clarifaiService.recognizeFood(imageFile)
-      
-      const imageUrl = URL.createObjectURL(imageFile)
-
-      // If no food detected, return unknown dish
-      if (!clarifaiPrediction.isFood) {
-        return {
-          name: 'Unknown dish',
-          confidence: clarifaiPrediction.confidence,
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0,
-          sodium: 0,
-          fiber: 0,
-          sugar: 0,
-          image: imageUrl,
-          originalPrediction: clarifaiPrediction.name,
-          mappingReason: 'no_match'
-        }
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        await tf.ready()
+        const loadedModel = await mobilenet.load()
+        setModel(loadedModel)
+        setIsLoading(false)
+      } catch (err) {
+        setError('Failed to load AI model')
+        setIsLoading(false)
+        console.error('Model loading error:', err)
       }
-
-      // Use local enhancement layer to map to Singaporean dishes
-      const mockPredictions = [{
-        className: clarifaiPrediction.name,
-        probability: clarifaiPrediction.confidence
-      }]
-      
-      const enhanced = enhancePrediction(mockPredictions)
-      
-      if (enhanced.enhancedDish) {
-        // Singaporean dish identified
-        return {
-          name: enhanced.enhancedDish.name,
-          confidence: enhanced.confidence,
-          calories: enhanced.enhancedDish.calories,
-          protein: enhanced.enhancedDish.protein,
-          carbs: enhanced.enhancedDish.carbs,
-          fat: enhanced.enhancedDish.fat,
-          saturatedFat: enhanced.enhancedDish.saturatedFat,
-          sodium: enhanced.enhancedDish.sodium,
-          fiber: enhanced.enhancedDish.fiber,
-          sugar: enhanced.enhancedDish.sugar,
-          image: imageUrl,
-          originalPrediction: enhanced.originalPrediction,
-          mappingReason: enhanced.mappingReason
-        }
-      } else {
-        // No Singaporean match, use Clarifai prediction with estimated nutrition
-        return {
-          name: clarifaiPrediction.name,
-          confidence: clarifaiPrediction.confidence,
-          calories: 350,
-          protein: 15,
-          carbs: 45,
-          fat: 12,
-          sodium: 600,
-          fiber: 3,
-          sugar: 5,
-          image: imageUrl,
-          originalPrediction: clarifaiPrediction.name,
-          mappingReason: 'no_match'
-        }
-      }
-    } catch (err) {
-      console.error('Recognition error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to recognize food. Please try again.'
-      setError(errorMessage)
-      return null
-    } finally {
-      setIsLoading(false)
     }
+
+    loadModel()
   }, [])
 
-  return { 
-    recognizeFood, 
-    isLoading, 
-    error, 
-    isModelReady: true // Clarifai is always ready (cloud-based)
-  }
+  const recognizeFood = useCallback(async (imageFile: File): Promise<FoodPrediction | null> => {
+    if (!model) {
+      setError('Model not loaded yet')
+      return null
+    }
+
+    try {
+      const imageUrl = URL.createObjectURL(imageFile)
+      const img = new Image()
+      
+      return new Promise((resolve) => {
+        img.onload = async () => {
+          try {
+            const predictions = await model.classify(img)
+            
+            // Use local enhancement layer
+            const enhanced = enhancePrediction(predictions)
+            
+            if (enhanced.enhancedDish) {
+              // Singaporean dish identified
+              resolve({
+                name: enhanced.enhancedDish.name,
+                confidence: enhanced.confidence,
+                calories: enhanced.enhancedDish.calories,
+                protein: enhanced.enhancedDish.protein,
+                carbs: enhanced.enhancedDish.carbs,
+                fat: enhanced.enhancedDish.fat,
+                sodium: enhanced.enhancedDish.sodium,
+                fiber: enhanced.enhancedDish.fiber,
+                sugar: enhanced.enhancedDish.sugar,
+                image: imageUrl,
+                originalPrediction: enhanced.originalPrediction,
+                mappingReason: enhanced.mappingReason
+              })
+            } else {
+              // No Singaporean match, use original prediction
+              const topPrediction = predictions[0]
+              resolve({
+                name: topPrediction.className,
+                confidence: topPrediction.probability,
+                calories: 350,
+                protein: 15,
+                carbs: 45,
+                fat: 12,
+                sodium: 600,
+                fiber: 3,
+                sugar: 5,
+                image: imageUrl,
+                originalPrediction: topPrediction.className,
+                mappingReason: 'no_match'
+              })
+            }
+          } catch (err) {
+            console.error('Classification error:', err)
+            setError('Failed to classify image')
+            resolve(null)
+          }
+        }
+        
+        img.onerror = () => {
+          setError('Failed to load image')
+          resolve(null)
+        }
+        
+        img.src = imageUrl
+      })
+    } catch (err) {
+      console.error('Recognition error:', err)
+      setError('Failed to process image')
+      return null
+    }
+  }, [model])
+
+  return { recognizeFood, isLoading, error, isModelReady: !!model }
 }
