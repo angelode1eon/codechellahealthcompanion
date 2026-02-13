@@ -1,47 +1,90 @@
 import React from 'react'
-import { AlertCircle, CheckCircle, Info } from 'lucide-react'
+import { AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react'
 
+// Singapore-specific copywriting
+export const SGCopywriting = {
+  welcome: {
+    title: 'Welcome to Health Companion!',
+    subtitle: 'Track Your Food, Lah!',
+    description: 'Your personal AI nutrition tracker for Singaporean food! 🇸🇬'
+  },
+  upload: {
+    button: 'Snap Your Food!',
+    processing: 'Analyzing your food...',
+    success: 'Shiok! Food logged successfully!',
+    error: 'Alamak! Something went wrong. Try again?'
+  },
+  nutrition: {
+    calories: 'Calories',
+    protein: 'Protein',
+    carbs: 'Carbs',
+    fat: 'Fat',
+    sodium: 'Sodium',
+    fiber: 'Fiber',
+    sugar: 'Sugar'
+  },
+  insights: {
+    title: 'Your Health Insights',
+    dailyGoal: 'Daily Goal',
+    consumed: 'Consumed',
+    remaining: 'Remaining'
+  },
+  rewards: {
+    title: 'Your Rewards',
+    points: 'Points',
+    earnedPoints: 'You earned {points} points!',
+    badges: 'Badges Unlocked'
+  },
+  tips: {
+    title: 'Hawker Health Tips',
+    subtitle: 'Eat Smart at Hawker Centres! 🍜'
+  },
+  dataSource: {
+    local: 'Local Singaporean Food Database',
+    aiPowered: 'AI-Powered Analysis',
+    deviceOnly: 'All data stored on your device only'
+  }
+}
+
+// Message component with Singapore flair
 interface SGMessageProps {
-  type: 'success' | 'info' | 'warning'
+  type: 'success' | 'error' | 'info' | 'warning'
   message: string
 }
 
-export const SGMessage = ({ type, message }: SGMessageProps) => {
-  const configs = {
-    success: {
-      bg: 'bg-green-100',
-      border: 'border-green-400',
-      icon: CheckCircle,
-      iconColor: 'text-green-600'
-    },
-    info: {
-      bg: 'bg-blue-100',
-      border: 'border-blue-400',
-      icon: Info,
-      iconColor: 'text-blue-600'
-    },
-    warning: {
-      bg: 'bg-yellow-100',
-      border: 'border-yellow-400',
-      icon: AlertCircle,
-      iconColor: 'text-yellow-600'
-    }
+export const SGMessage: React.FC<SGMessageProps> = ({ type, message }) => {
+  const styles = {
+    success: 'bg-green-100 border-green-400 text-green-800',
+    error: 'bg-red-100 border-red-400 text-red-800',
+    info: 'bg-blue-100 border-blue-400 text-blue-800',
+    warning: 'bg-yellow-100 border-yellow-400 text-yellow-800'
   }
 
-  const config = configs[type]
-  const Icon = config.icon
+  const icons = {
+    success: <CheckCircle className="w-6 h-6" />,
+    error: <AlertCircle className="w-6 h-6" />,
+    info: <Info className="w-6 h-6" />,
+    warning: <AlertTriangle className="w-6 h-6" />
+  }
 
   return (
-    <div className={`${config.bg} ${config.border} border-4 rounded-2xl p-4 flex items-start gap-3`}>
-      <Icon className={`w-6 h-6 ${config.iconColor} flex-shrink-0 mt-1`} />
-      <p className="text-gray-800 font-medium">{message}</p>
+    <div className={`${styles[type]} border-4 rounded-2xl p-4 flex items-start gap-3`}>
+      {icons[type]}
+      <p className="font-medium flex-1">{message}</p>
     </div>
   )
 }
 
-export const SGLoadingSpinner = ({ message = 'Loading liao...' }: { message?: string }) => {
+// Loading spinner with Singapore style
+interface SGLoadingSpinnerProps {
+  message?: string
+}
+
+export const SGLoadingSpinner: React.FC<SGLoadingSpinnerProps> = ({ 
+  message = 'Loading...' 
+}) => {
   return (
-    <div className="flex flex-col items-center justify-center py-12">
+    <div className="flex flex-col items-center justify-center py-8">
       <div className="relative w-20 h-20 mb-4">
         <div className="absolute inset-0 border-8 border-memphis-pink rounded-full"></div>
         <div className="absolute inset-0 border-8 border-memphis-purple rounded-full border-t-transparent animate-spin"></div>
@@ -51,67 +94,24 @@ export const SGLoadingSpinner = ({ message = 'Loading liao...' }: { message?: st
   )
 }
 
-export const SGEmptyState = ({ 
-  emoji, 
-  title, 
-  description 
-}: { 
-  emoji: string
-  title: string
-  description: string 
-}) => {
-  return (
-    <div className="text-center py-12">
-      <div className="text-8xl mb-4">{emoji}</div>
-      <h3 className="text-3xl font-bold text-memphis-purple mb-3">{title}</h3>
-      <p className="text-xl text-gray-700">{description}</p>
-    </div>
-  )
+// Badge component
+interface SGBadgeProps {
+  text: string
+  color?: 'purple' | 'cyan' | 'green' | 'yellow' | 'pink'
 }
 
-// Singlish copywriting constants
-export const SGCopywriting = {
-  welcome: {
-    title: 'Eh welcome lah! 👋',
-    subtitle: 'Track your makan, stay healthy can!',
-    cta: 'Start tracking now!'
-  },
-  upload: {
-    button: 'Snap Your Food! 📸',
-    processing: 'AI checking your food liao...',
-    success: 'Wah! Found your dish already! 🎉',
-    error: 'Alamak! Cannot recognize leh. Try again?'
-  },
-  rewards: {
-    earnedPoints: 'Shiok! You earned {points} points! 🌟',
-    lowPoints: 'Not bad lah, keep trying! 💪',
-    highPoints: 'Wah steady lah! Very healthy! 🏆',
-    streakMessage: 'You on fire! {days} days streak! 🔥'
-  },
-  tips: {
-    lessOil: 'Ask uncle "少油" (less oil) can save calories!',
-    noSkin: 'No skin = healthier, still shiok what!',
-    shareFood: 'Share with friend lah, healthier and cheaper!',
-    plainRice: 'Plain rice better than oily rice, trust me',
-    drinkWater: 'Drink plain water also can, free and healthy!'
-  },
-  achievements: {
-    firstMeal: 'First meal logged! Steady pom pi pi! 🎊',
-    weekStreak: 'One week streak! You very consistent leh! 🔥',
-    healthyChoice: 'Wah you choose healthy option! Respect! 💚',
-    pointMaster: 'Point master sia! Keep it up! 🏆'
-  },
-  errors: {
-    noImage: 'Eh, need to upload photo first leh!',
-    apiError: 'Alamak! Server got problem. Try again later?',
-    noInternet: 'Wah your internet down ah? Check your connection!',
-    invalidData: 'Something wrong with the data leh. Try again?'
-  },
-  navigation: {
-    home: 'Home',
-    log: 'My Makan',
-    tips: 'Hawker Tips',
-    wrapped: 'My Progress',
-    rewards: 'Rewards'
+export const SGBadge: React.FC<SGBadgeProps> = ({ text, color = 'purple' }) => {
+  const colors = {
+    purple: 'bg-memphis-purple',
+    cyan: 'bg-memphis-cyan',
+    green: 'bg-memphis-green',
+    yellow: 'bg-memphis-yellow',
+    pink: 'bg-memphis-pink'
   }
+
+  return (
+    <span className={`${colors[color]} text-white px-4 py-2 rounded-full text-sm font-bold`}>
+      {text}
+    </span>
+  )
 }

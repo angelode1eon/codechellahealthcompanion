@@ -3,13 +3,11 @@ import Header from './components/Header'
 import Navigation from './components/Navigation'
 import UploadButton from './components/UploadButton'
 import GeometricBackground from './components/GeometricBackground'
-import DailyIntakeSummary from './components/DailyIntakeSummary'
 import FoodLog from './components/FoodLog'
 import RewardsPage from './components/RewardsPage'
 import MonthlyWrappedPage from './components/MonthlyWrappedPage'
 import HawkerHealthTips from './components/HawkerHealthTips'
-import LoginPage from './components/LoginPage'
-import HealthSummaryCard from './components/HealthSummaryCard'
+import ProfileSetup from './components/ProfileSetup'
 import PersonalizedDashboard from './components/PersonalizedDashboard'
 import NutrientAlerts from './components/NutrientAlerts'
 import ConditionTrackedNutrients from './components/ConditionTrackedNutrients'
@@ -20,15 +18,16 @@ import { useDailyIntake } from './hooks/useDailyIntake'
 import { useMealHistory } from './hooks/useMealHistory'
 import { useRewardsPoints } from './hooks/useRewardsPoints'
 import { useNutrientAlerts } from './hooks/useNutrientAlerts'
-import { healthhubAuth } from './services/healthhubAuth'
+import { localUserProfile } from './services/localUserProfile'
 import { generateHealthSummary } from './services/healthSummaryService'
 import { UserHealthProfile, HealthSummary } from './types/healthhub'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Settings } from 'lucide-react'
 
 function App() {
   const [activeTab, setActiveTab] = useState('home')
   const [currentUser, setCurrentUser] = useState<UserHealthProfile | null>(null)
   const [healthSummary, setHealthSummary] = useState<HealthSummary | null>(null)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const { dailyIntake, addMeal } = useDailyIntake()
   const { addMealToHistory } = useMealHistory()
   const { addMealPoints, updateStreak } = useRewardsPoints()
@@ -39,25 +38,30 @@ function App() {
   )
 
   useEffect(() => {
-    if (healthhubAuth.isAuthenticated()) {
-      const user = healthhubAuth.getCurrentUser()
-      if (user) {
-        setCurrentUser(user)
-        setHealthSummary(generateHealthSummary(user))
-      }
+    // Load user profile from localStorage on mount
+    const profile = localUserProfile.getProfile()
+    if (profile) {
+      setCurrentUser(profile)
+      setHealthSummary(generateHealthSummary(profile))
     }
   }, [])
 
-  const handleLoginSuccess = (user: UserHealthProfile) => {
-    setCurrentUser(user)
-    setHealthSummary(generateHealthSummary(user))
+  const handleProfileComplete = (profile: UserHealthProfile) => {
+    localUserProfile.saveProfile(profile)
+    setCurrentUser(profile)
+    setHealthSummary(generateHealthSummary(profile))
   }
 
   const handleLogout = () => {
-    healthhubAuth.logout()
-    setCurrentUser(null)
-    setHealthSummary(null)
-    setActiveTab('home')
+    if (confirm('Are you sure you want to clear your profile? All your data will be deleted.')) {
+      localUserProfile.deleteProfile()
+      setCurrentUser(null)
+      setHealthSummary(null)
+      setActiveTab('home')
+      // Clear all app data
+      localStorage.clear()
+      window.location.reload()
+    }
   }
 
   const handleAddMeal = (meal: any) => {
@@ -70,8 +74,9 @@ function App() {
     console.log(`${SGCopywriting.rewards.earnedPoints.replace('{points}', points.toString())}`)
   }
 
+  // Show profile setup if no user profile exists
   if (!currentUser || !healthSummary) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />
+    return <ProfileSetup onProfileComplete={handleProfileComplete} />
   }
 
   // Show Buddy Ah page without floating chat
@@ -95,6 +100,7 @@ function App() {
       <div className="relative z-10">
         <Header />
         
+        {/* User Profile Bar */}
         <div className="bg-white border-b-8 border-memphis-purple shadow-lg">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between max-w-2xl mx-auto">
@@ -104,16 +110,32 @@ function App() {
                 </div>
                 <div>
                   <p className="text-xl font-bold text-memphis-purple">{currentUser.name}</p>
-                  <p className="text-sm text-gray-600">{currentUser.email}</p>
+                  <p className="text-sm text-gray-600">
+                    {currentUser.age} years • {currentUser.gender} • {currentUser.weight}kg
+                  </p>
                 </div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Logout</span>
-              </button>
+              
+              <div className="relative">
+                <button
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-2 bg-memphis-purple hover:bg-opacity-90 text-white font-bold py-2 px-4 rounded-xl transition-colors"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
+
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border-4 border-memphis-purple overflow-hidden z-50">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 font-bold transition-colors"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Clear Profile</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -135,7 +157,7 @@ function App() {
                       {SGCopywriting.welcome.subtitle} 🍽️
                     </h2>
                     <p className="text-xl text-gray-700 mb-6">
-                      Upload photo and let AI check your food with HPB nutrition data!
+                      Upload photo and let AI analyze your food with our Local Singaporean Food Database!
                     </p>
                     
                     <UploadButton onAddMeal={handleAddMeal} />

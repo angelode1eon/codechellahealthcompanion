@@ -28,8 +28,14 @@ export interface FoodPrediction {
   timestamp?: number
   points?: number
   originalPrediction?: string
-  mappingReason?: 'keyword_match' | 'generic_mapping' | 'no_match' | 'user_corrected'
+  mappingReason?: 'signature_match' | 'keyword_match' | 'generic_mapping' | 'no_match' | 'user_corrected'
   userCorrected?: boolean
+  matchDetails?: {
+    keywordMatches: number
+    signatureMatch: boolean
+    genericMatch: boolean
+    weightedScore: number
+  }
 }
 
 export interface DailyIntake {

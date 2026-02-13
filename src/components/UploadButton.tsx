@@ -1,104 +1,133 @@
 import React, { useRef, useState } from 'react'
-import { Camera, Upload, Loader2 } from 'lucide-react'
+import { Camera, Upload, Sparkles } from 'lucide-react'
 import { useFoodRecognition } from '../hooks/useFoodRecognition'
-import FoodResult from './FoodResult'
-import { FoodPrediction } from '../types/food'
+import { SGMessage, SGLoadingSpinner, SGCopywriting } from './SGLocalizedUI'
 
 interface UploadButtonProps {
-  onAddMeal: (meal: FoodPrediction) => void
+  onAddMeal: (meal: any) => void
 }
 
-const UploadButton = ({ onAddMeal }: UploadButtonProps) => {
+const UploadButton: React.FC<UploadButtonProps> = ({ onAddMeal }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { recognizeFood, isLoading: modelLoading, isModelReady } = useFoodRecognition()
   const [isProcessing, setIsProcessing] = useState(false)
-  const [result, setResult] = useState<FoodPrediction | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const { recognizeFood, isModelReady } = useFoodRecognition()
 
-  const handleClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      setIsProcessing(true)
-      setResult(null)
+    if (!file) return
+
+    setIsProcessing(true)
+    setError(null)
+
+    try {
+      // All nutrition data comes from singaporeanDishes.ts via useFoodRecognition hook
+      const prediction = await recognizeFood(file)
       
-      try {
-        const prediction = await recognizeFood(file)
-        if (prediction) {
-          setResult(prediction)
-        }
-      } catch (error) {
-        console.error('Error processing image:', error)
-      } finally {
-        setIsProcessing(false)
+      if (prediction) {
+        // Prediction already contains nutrition data from singaporeanDishes.ts
+        onAddMeal(prediction)
+      } else {
+        setError(SGCopywriting.upload.error)
+      }
+    } catch (err) {
+      setError(SGCopywriting.upload.error)
+      console.error('Upload error:', err)
+    } finally {
+      setIsProcessing(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
       }
     }
   }
 
-  const handleClose = () => {
-    setResult(null)
+  const handleButtonClick = () => {
+    fileInputRef.current?.click()
   }
 
-  if (result) {
-    return <FoodResult prediction={result} onClose={handleClose} onAddToLog={onAddMeal} />
+  if (!isModelReady) {
+    return (
+      <div className="text-center bg-memphis-pink rounded-3xl p-8 border-6 border-memphis-purple shadow-xl">
+        <SGLoadingSpinner message="Loading AI model..." />
+        <p className="text-gray-600 mt-4 text-lg">
+          First time loading may take a few seconds...
+        </p>
+        <div className="mt-4 bg-white rounded-2xl p-4 border-4 border-memphis-cyan">
+          <p className="text-sm text-gray-700">
+            <strong>🤖 Local AI Processing:</strong> All analysis happens on your device!
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="relative">
+    <div className="space-y-4">
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         capture="environment"
-        onChange={handleFileChange}
+        onChange={handleFileSelect}
         className="hidden"
-        disabled={!isModelReady || isProcessing}
       />
-      
-      <button
-        onClick={handleClick}
-        disabled={!isModelReady || isProcessing}
-        className="w-full bg-memphis-coral hover:bg-opacity-90 text-white font-bold py-6 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-6 border-memphis-purple relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-      >
-        <div className="absolute inset-0 bg-memphis-yellow opacity-0 group-hover:opacity-20 transition-opacity"></div>
-        
-        <div className="relative z-10 flex items-center justify-center gap-4">
-          {isProcessing ? (
-            <>
-              <Loader2 className="w-8 h-8 animate-spin" strokeWidth={2.5} />
-              <span className="text-2xl">Analyzing Food...</span>
-            </>
-          ) : modelLoading ? (
-            <>
-              <Loader2 className="w-8 h-8 animate-spin" strokeWidth={2.5} />
-              <span className="text-2xl">Loading AI Model...</span>
-            </>
-          ) : (
-            <>
-              <div className="flex gap-2">
-                <Camera className="w-8 h-8" strokeWidth={2.5} />
-                <Upload className="w-8 h-8" strokeWidth={2.5} />
-              </div>
-              <span className="text-2xl">Upload Food Photo</span>
-            </>
-          )}
+
+      {error && <SGMessage type="error" message={error} />}
+
+      {isProcessing ? (
+        <div className="bg-memphis-pink rounded-3xl p-8 border-6 border-memphis-purple shadow-xl">
+          <SGLoadingSpinner message={SGCopywriting.upload.processing} />
+          <div className="mt-6 bg-white rounded-2xl p-4 border-4 border-memphis-cyan">
+            <div className="flex items-center gap-3 justify-center">
+              <Sparkles className="w-5 h-5 text-memphis-purple" />
+              <p className="text-sm font-bold text-memphis-purple">
+                Analyzing with {SGCopywriting.dataSource.local}
+              </p>
+            </div>
+          </div>
         </div>
-        
-        {!isProcessing && !modelLoading && (
-          <>
-            <div className="absolute top-2 right-2 w-6 h-6 bg-memphis-yellow rounded-full"></div>
-            <div className="absolute bottom-2 left-2 w-4 h-4 bg-memphis-cyan"></div>
-          </>
-        )}
-      </button>
-      
-      <div className="mt-4 text-center">
-        <p className="text-lg text-memphis-purple font-bold">
-          {modelLoading ? '🤖 AI Model Loading...' : '📸 Snap a pic or choose from gallery'}
-        </p>
-      </div>
+      ) : (
+        <>
+          <button
+            onClick={handleButtonClick}
+            className="w-full bg-memphis-green hover:bg-opacity-90 text-white font-bold py-6 px-8 rounded-3xl shadow-2xl transform hover:scale-105 transition-all border-6 border-memphis-cyan"
+          >
+            <div className="flex items-center justify-center gap-4">
+              <Camera className="w-8 h-8" />
+              <span className="text-3xl">{SGCopywriting.upload.button}</span>
+              <Upload className="w-8 h-8" />
+            </div>
+          </button>
+
+          {/* Data Source Badge */}
+          <div className="bg-white rounded-2xl p-4 border-4 border-memphis-purple shadow-lg">
+            <div className="flex items-center gap-3 justify-center">
+              <div className="text-3xl">🇸🇬</div>
+              <div className="text-left">
+                <p className="text-sm font-bold text-memphis-purple">
+                  {SGCopywriting.dataSource.local}
+                </p>
+                <p className="text-xs text-gray-600">
+                  13+ local dishes • Accurate nutrition data
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Privacy Badge */}
+          <div className="bg-gradient-to-r from-memphis-cyan to-memphis-green rounded-2xl p-4 border-4 border-memphis-yellow shadow-lg">
+            <div className="flex items-center gap-3 justify-center text-white">
+              <div className="text-2xl">🔒</div>
+              <div className="text-left">
+                <p className="text-sm font-bold">100% Private & Secure</p>
+                <p className="text-xs opacity-90">
+                  All processing happens on your device
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
